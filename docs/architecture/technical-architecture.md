@@ -12,7 +12,7 @@ graph LR
             ClaimMgmt[Claim Management]
             AuthKYC[Auth & eKYC]
             ProjMgmt[Project Management]
-            OfficerReview[Officer Review]
+            ProjectApproval[Project Approval]
             AdminDash[Admin Dashboard]
             StatusStream[Status Stream - SSE]
             DecisionEngine[Decision Engine]
@@ -50,6 +50,9 @@ graph LR
     
     ClaimMgmt --> Postgres
     ClaimMgmt --> AuditLog
+
+    ProjectApproval --> Postgres
+    ProjectApproval --> AuditLog
     
     %% Real-time Notification Flow
     OrchWorker --> Redis

@@ -2,11 +2,11 @@
 erDiagram
     CITIZEN ||--o{ CLAIM : "submits"
     PROJECT ||--|{ REGISTRATION_PHASE : "defines"
+    PROJECT ||--o| PROJECT_APPROVAL : "requires"
     REGISTRATION_PHASE ||--o{ CLAIM : "manages"
     CLAIM ||--o{ ELIGIBILITY_RESULT : "triggers"
-    CLAIM ||--o| OFFICER_REVIEW : "requires"
     CLAIM ||--o{ AUDIT_LOG : "logs"
-    OFFICER ||--o{ OFFICER_REVIEW : "performs"
+    OFFICER ||--o{ PROJECT_APPROVAL : "performs"
 
     CITIZEN {
         uuid id PK
@@ -22,6 +22,16 @@ erDiagram
         decimal subsidy_amount
         timestamp start_date
         timestamp end_date
+        string status "Draft/Active/Closed"
+    }
+
+    PROJECT_APPROVAL {
+        uuid id PK
+        uuid project_id FK
+        uuid officer_id FK
+        string decision "Approve/Reject"
+        text comment
+        timestamp approved_at
     }
 
     REGISTRATION_PHASE {
@@ -38,7 +48,7 @@ erDiagram
         uuid id PK
         uuid citizen_id FK
         uuid phase_id FK
-        string status "VerificationStatus"
+        string status "VerificationStatus (Auto)"
         string reject_reason
         timestamp submitted_at
     }
@@ -49,15 +59,6 @@ erDiagram
         string source "e.g., DOPA"
         jsonb raw_data
         boolean passed
-    }
-
-    OFFICER_REVIEW {
-        uuid id PK
-        uuid claim_id FK
-        uuid officer_id FK
-        string decision
-        text comment
-        timestamp reviewed_at
     }
     
     AUDIT_LOG {
@@ -73,6 +74,6 @@ erDiagram
         uuid id PK
         string username
         string full_name
-        string role "e.g., Reviewer, Admin"
+        string role "e.g., PolicyMaker, Admin"
     }
 ```
