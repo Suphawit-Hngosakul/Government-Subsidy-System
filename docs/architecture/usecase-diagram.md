@@ -6,7 +6,7 @@ flowchart LR
     Admin((ผู้ดูแลระบบ<br/>Admin))
 
     subgraph Platform["ระบบจัดการสวัสดิการภาครัฐ (Government Subsidy Platform)"]
-        %% Citizen Use Cases
+        %% Citizen Actions
         subgraph Citizen_Actions["ส่วนของประชาชน"]
             UC1(["UC1: ลงทะเบียน & ยืนยันตัวตน eKYC"])
             UC2(["UC2: ยื่นคำขอรับสิทธิ์สวัสดิการ"])
@@ -15,17 +15,17 @@ flowchart LR
 
         %% Admin Actions
         subgraph Admin_Actions["ส่วนของผู้ดูแลระบบ"]
-            UC6(["UC6: สร้างโครงการและกำหนดเกณฑ์สิทธิ์"])
-            UC7(["UC7: ตรวจสอบ Audit Log และรายงาน"])
+            UC4(["UC4: สร้างโครงการและกำหนดเกณฑ์สิทธิ์"])
+            UC5(["UC5: ตรวจสอบ Audit Log และรายงาน"])
         end
 
-        %% Officer Actions (New Automated Focus)
+        %% Officer Actions
         subgraph Officer_Actions["ส่วนของเจ้าหน้าที่ระดับนโยบาย"]
-            UC9(["UC9: อนุมัติโครงการสวัสดิการ<br/>Project Approval"])
+            UC6(["UC6: อนุมัติโครงการสวัสดิการ<br/>Project Approval"])
         end
 
         %% Internal System Process
-        UC8(["UC8: ตัดสินสิทธิ์อัตโนมัติ 100%<br/>Auto Decision Engine"])
+        UC7(["UC7: ตัดสินสิทธิ์อัตโนมัติ 100%<br/>Auto Decision Engine"])
     end
 
     %% Citizen Connections
@@ -34,16 +34,16 @@ flowchart LR
     Citizen --- UC3
 
     %% Admin Connections
-    Admin --- UC6
-    Admin --- UC7
+    Admin --- UC4
+    Admin --- UC5
 
     %% Officer Connections
-    Officer --- UC9
+    Officer --- UC6
 
     %% Logical Relationships
     UC2 -.->|include| UC1
-    UC2 -.->|triggered| UC8
-    UC9 -.->|authorize| UC6
+    UC2 -.->|triggered| UC7
+    UC6 -.->|authorize| UC4
 
     %% Styling
     style Citizen fill:#0d9488,stroke:#fff,color:#fff
@@ -54,10 +54,10 @@ flowchart LR
     style UC2 fill:#f0fdfa,stroke:#0d9488
     style UC3 fill:#f0fdfa,stroke:#0d9488
     
-    style UC6 fill:#f5f3ff,stroke:#7c3aed
-    style UC7 fill:#f5f3ff,stroke:#7c3aed
+    style UC4 fill:#f5f3ff,stroke:#7c3aed
+    style UC5 fill:#f5f3ff,stroke:#7c3aed
     
-    style UC9 fill:#eff6ff,stroke:#0369a1
+    style UC6 fill:#eff6ff,stroke:#0369a1
     
-    style UC8 fill:#fff7ed,stroke:#ea580c,stroke-dasharray: 5 5
+    style UC7 fill:#fff7ed,stroke:#ea580c,stroke-dasharray: 5 5
 ```
