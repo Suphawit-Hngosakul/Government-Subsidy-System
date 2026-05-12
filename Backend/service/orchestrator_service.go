@@ -177,21 +177,3 @@ func decisionMessage(result domain.DecisionResult) string {
 		return "claim requires follow-up"
 	}
 }
-
-type MockDOPAClient struct{}
-
-func (MockDOPAClient) Verify(ctx context.Context, nationalID string) (domain.DOPAResult, error) {
-	return domain.DOPAResult{Valid: true, Age: 35, Alive: true, CardActive: true}, nil
-}
-
-type MockSSOClient struct{}
-
-func (MockSSOClient) Status(ctx context.Context, nationalID string) (domain.SSOResult, error) {
-	return domain.SSOResult{Section: "40", ContributionMonths: 12}, nil
-}
-
-type MockKTBClient struct{}
-
-func (MockKTBClient) FinancialCheck(ctx context.Context, nationalID string) (domain.KTBResult, error) {
-	return domain.KTBResult{DepositTotal: 12000, AverageMonthlyIncome: 15000, PromptPayLinked: true}, nil
-}

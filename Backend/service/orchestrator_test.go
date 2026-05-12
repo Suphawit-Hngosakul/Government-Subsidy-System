@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"government-subsidy-system/backend/adapter"
 	"government-subsidy-system/backend/domain"
 	"government-subsidy-system/backend/repository"
 )
@@ -34,7 +35,12 @@ func TestEvaluateDecisionRejectsInvalidDOPA(t *testing.T) {
 
 func TestOrchestrateStoresResultAndEvents(t *testing.T) {
 	repo := repository.NewMemoryClaimRepository()
-	svc := NewOrchestratorService(repo, MockDOPAClient{}, MockSSOClient{}, MockKTBClient{})
+	svc := NewOrchestratorService(
+		repo,
+		adapter.NewMockDOPAAdapter(),
+		adapter.NewMockSSOAdapter(),
+		adapter.NewMockKTBAdapter(),
+	)
 
 	result, err := svc.Orchestrate(context.Background(), domain.OrchestrateRequest{
 		ClaimID:    "claim-1",

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"government-subsidy-system/backend/adapter"
 	"government-subsidy-system/backend/controller"
 	"government-subsidy-system/backend/repository"
 	"government-subsidy-system/backend/service"
@@ -13,9 +14,9 @@ func main() {
 	repo := repository.NewMemoryClaimRepository()
 	orchestrator := service.NewOrchestratorService(
 		repo,
-		service.MockDOPAClient{},
-		service.MockSSOClient{},
-		service.MockKTBClient{},
+		adapter.NewMockDOPAAdapter(),
+		adapter.NewMockSSOAdapter(),
+		adapter.NewMockKTBAdapter(),
 	)
 
 	mux := http.NewServeMux()
