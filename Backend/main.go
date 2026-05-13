@@ -13,16 +13,21 @@ import (
 
 func main() {
 	projectRepo := repository.NewMemoryProjectRepository()
+	claimRepo := repository.NewMemoryOfficerClaimRepository()
+	auditRepo := repository.NewMemoryAuditRepository()
+
 	projectService := service.NewProjectService(projectRepo)
 
-	claimRepo := repository.NewMemoryOfficerClaimRepository()
 	orchestratorURL := envOrDefault("ORCHESTRATOR_BASE_URL", "http://localhost:8080")
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter(orchestratorURL)
-	officerService := service.NewOfficerService(claimRepo, orchestratorClient)
+	officerService := service.NewOfficerService(claimRepo, orchestratorClient, auditRepo)
+
+	dashboardService := service.NewDashboardService(projectRepo, claimRepo, auditRepo)
 
 	mux := http.NewServeMux()
 	controller.NewAdminProjectHandler(projectService).RegisterRoutes(mux)
 	controller.NewOfficerClaimHandler(officerService).RegisterRoutes(mux)
+	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
 
 	log.Printf("government subsidy backend listening on :8080 (orchestrator=%s)", orchestratorURL)
 	if err := http.ListenAndServe(":8080", mux); err != nil {

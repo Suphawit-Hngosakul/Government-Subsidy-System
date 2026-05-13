@@ -25,13 +25,14 @@ func (s *stubOrchestrator) GetDecision(_ context.Context, claimID string) (domai
 	return domain.EligibilityResult{}, nil
 }
 
-func newOfficerServiceForTest(orch OrchestratorClient) (*OfficerService, *repository.MemoryOfficerClaimRepository) {
+func newOfficerServiceForTest(orch OrchestratorClient) (*OfficerService, *repository.MemoryOfficerClaimRepository, *repository.MemoryAuditRepository) {
 	repo := repository.NewMemoryOfficerClaimRepository()
-	return NewOfficerService(repo, orch), repo
+	audit := repository.NewMemoryAuditRepository()
+	return NewOfficerService(repo, orch, audit), repo, audit
 }
 
 func TestOfficerServiceListPendingReturnsSeededClaims(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	list := svc.ListPending(context.Background())
 	if len(list) < 1 {
@@ -56,7 +57,7 @@ func TestOfficerServiceDetailMergesClaimAndEligibility(t *testing.T) {
 		},
 	}
 	orch := &stubOrchestrator{decisions: map[string]domain.EligibilityResult{"claim-001": expected}}
-	svc, _ := newOfficerServiceForTest(orch)
+	svc, _, _ := newOfficerServiceForTest(orch)
 
 	detail, err := svc.Detail(context.Background(), "claim-001")
 	if err != nil {
@@ -77,7 +78,7 @@ func TestOfficerServiceDetailMergesClaimAndEligibility(t *testing.T) {
 }
 
 func TestOfficerServiceDetailUnknownClaimReturnsNotFound(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	_, err := svc.Detail(context.Background(), "claim-missing")
 	if !errors.Is(err, repository.ErrOfficerClaimNotFound) {
@@ -86,7 +87,7 @@ func TestOfficerServiceDetailUnknownClaimReturnsNotFound(t *testing.T) {
 }
 
 func TestOfficerServiceDetailReturnsNilEligibilityWhenOrchestratorHasNoDecision(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	detail, err := svc.Detail(context.Background(), "claim-001")
 	if err != nil {
@@ -99,7 +100,7 @@ func TestOfficerServiceDetailReturnsNilEligibilityWhenOrchestratorHasNoDecision(
 
 func TestOfficerServiceDetailSwallowsOrchestratorErrorAndReturnsClaim(t *testing.T) {
 	boom := errors.New("network down")
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{err: boom})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{err: boom})
 
 	detail, err := svc.Detail(context.Background(), "claim-001")
 	if err != nil {
@@ -114,7 +115,7 @@ func TestOfficerServiceDetailSwallowsOrchestratorErrorAndReturnsClaim(t *testing
 }
 
 func TestOfficerServiceDetailEmptyIDReturnsErrClaimIDRequired(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	_, err := svc.Detail(context.Background(), "")
 	if !errors.Is(err, ErrClaimIDRequired) {
@@ -123,7 +124,7 @@ func TestOfficerServiceDetailEmptyIDReturnsErrClaimIDRequired(t *testing.T) {
 }
 
 func TestOfficerServiceDecideEmptyIDReturnsErrClaimIDRequired(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	if _, err := svc.Approve(context.Background(), "", domain.OfficerDecisionInput{OfficerID: "officer-1"}); !errors.Is(err, ErrClaimIDRequired) {
 		t.Fatalf("Approve(\"\"): expected ErrClaimIDRequired, got %v", err)
@@ -134,7 +135,7 @@ func TestOfficerServiceDecideEmptyIDReturnsErrClaimIDRequired(t *testing.T) {
 }
 
 func TestOfficerServiceApproveTransitionsPendingToApproved(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	claim, err := svc.Approve(context.Background(), "claim-001", domain.OfficerDecisionInput{OfficerID: "officer-1"})
 	if err != nil {
@@ -152,7 +153,7 @@ func TestOfficerServiceApproveTransitionsPendingToApproved(t *testing.T) {
 }
 
 func TestOfficerServiceApproveRequiresOfficerID(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	_, err := svc.Approve(context.Background(), "claim-001", domain.OfficerDecisionInput{})
 	if !errors.Is(err, ErrOfficerIDRequired) {
@@ -161,7 +162,7 @@ func TestOfficerServiceApproveRequiresOfficerID(t *testing.T) {
 }
 
 func TestOfficerServiceRejectRequiresReason(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	_, err := svc.Reject(context.Background(), "claim-001", domain.OfficerDecisionInput{OfficerID: "officer-1"})
 	if !errors.Is(err, ErrRejectReasonRequired) {
@@ -170,7 +171,7 @@ func TestOfficerServiceRejectRequiresReason(t *testing.T) {
 }
 
 func TestOfficerServiceRejectTransitionsPendingToRejected(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	claim, err := svc.Reject(context.Background(), "claim-001", domain.OfficerDecisionInput{
 		OfficerID: "officer-2",
@@ -188,7 +189,7 @@ func TestOfficerServiceRejectTransitionsPendingToRejected(t *testing.T) {
 }
 
 func TestOfficerServiceCannotDecideAlreadyDecidedClaim(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 	ctx := context.Background()
 
 	if _, err := svc.Approve(ctx, "claim-001", domain.OfficerDecisionInput{OfficerID: "officer-1"}); err != nil {
@@ -202,10 +203,59 @@ func TestOfficerServiceCannotDecideAlreadyDecidedClaim(t *testing.T) {
 }
 
 func TestOfficerServiceUnknownClaimDecisionReturnsNotFound(t *testing.T) {
-	svc, _ := newOfficerServiceForTest(&stubOrchestrator{})
+	svc, _, _ := newOfficerServiceForTest(&stubOrchestrator{})
 
 	_, err := svc.Approve(context.Background(), "claim-missing", domain.OfficerDecisionInput{OfficerID: "officer-1"})
 	if !errors.Is(err, repository.ErrOfficerClaimNotFound) {
 		t.Fatalf("expected ErrClaimNotFound, got %v", err)
+	}
+}
+
+func TestOfficerServiceApproveAppendsAuditEntry(t *testing.T) {
+	svc, _, audit := newOfficerServiceForTest(&stubOrchestrator{})
+	ctx := context.Background()
+
+	if _, err := svc.Approve(ctx, "claim-001", domain.OfficerDecisionInput{OfficerID: "officer-1", Reason: "verified"}); err != nil {
+		t.Fatalf("approve returned error: %v", err)
+	}
+
+	entries := audit.List(ctx, 10)
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 audit entry, got %d", len(entries))
+	}
+	got := entries[0]
+	if got.Action != domain.AuditActionClaimApproved {
+		t.Fatalf("expected action %s, got %s", domain.AuditActionClaimApproved, got.Action)
+	}
+	if got.Actor != "officer-1" || got.EntityID != "claim-001" {
+		t.Fatalf("unexpected actor/entity in audit: %+v", got)
+	}
+	if got.Metadata["reason"] != "verified" {
+		t.Fatalf("expected reason in metadata, got %+v", got.Metadata)
+	}
+}
+
+func TestOfficerServiceRejectAppendsAuditEntry(t *testing.T) {
+	svc, _, audit := newOfficerServiceForTest(&stubOrchestrator{})
+	ctx := context.Background()
+
+	if _, err := svc.Reject(ctx, "claim-002", domain.OfficerDecisionInput{OfficerID: "officer-2", Reason: "income high"}); err != nil {
+		t.Fatalf("reject returned error: %v", err)
+	}
+
+	entries := audit.List(ctx, 10)
+	if len(entries) != 1 || entries[0].Action != domain.AuditActionClaimRejected {
+		t.Fatalf("expected single claim.rejected audit entry, got %+v", entries)
+	}
+}
+
+func TestOfficerServiceFailedDecisionDoesNotAppendAudit(t *testing.T) {
+	svc, _, audit := newOfficerServiceForTest(&stubOrchestrator{})
+	ctx := context.Background()
+
+	_, _ = svc.Approve(ctx, "claim-missing", domain.OfficerDecisionInput{OfficerID: "officer-1"})
+
+	if entries := audit.List(ctx, 10); len(entries) != 0 {
+		t.Fatalf("expected no audit entries on failed decision, got %d", len(entries))
 	}
 }

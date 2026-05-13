@@ -21,13 +21,18 @@ type OrchestratorClient interface {
 	GetDecision(ctx context.Context, claimID string) (domain.EligibilityResult, error)
 }
 
+type AuditLogger interface {
+	Append(ctx context.Context, entry domain.AuditEntry) (domain.AuditEntry, error)
+}
+
 type OfficerService struct {
 	repo         repository.OfficerClaimRepository
 	orchestrator OrchestratorClient
+	audit        AuditLogger
 }
 
-func NewOfficerService(repo repository.OfficerClaimRepository, orchestrator OrchestratorClient) *OfficerService {
-	return &OfficerService{repo: repo, orchestrator: orchestrator}
+func NewOfficerService(repo repository.OfficerClaimRepository, orchestrator OrchestratorClient, audit AuditLogger) *OfficerService {
+	return &OfficerService{repo: repo, orchestrator: orchestrator, audit: audit}
 }
 
 func (s *OfficerService) ListPending(ctx context.Context) []domain.OfficerClaim {
@@ -93,5 +98,23 @@ func (s *OfficerService) decide(ctx context.Context, claimID string, input domai
 		DecidedAt: time.Now().UTC(),
 	}
 
-	return s.repo.Update(ctx, claim)
+	updated, err := s.repo.Update(ctx, claim)
+	if err != nil {
+		return domain.OfficerClaim{}, err
+	}
+
+	action := domain.AuditActionClaimApproved
+	if status == domain.OfficerStatusRejected {
+		action = domain.AuditActionClaimRejected
+	}
+	if _, auditErr := s.audit.Append(ctx, domain.AuditEntry{
+		Actor:    input.OfficerID,
+		Action:   action,
+		EntityID: claimID,
+		Metadata: map[string]any{"reason": input.Reason},
+	}); auditErr != nil {
+		log.Printf("officer: failed to append audit entry for claim %s: %v", claimID, auditErr)
+	}
+
+	return updated, nil
 }
