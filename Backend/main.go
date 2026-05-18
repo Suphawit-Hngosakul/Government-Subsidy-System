@@ -17,6 +17,10 @@ import (
 )
 
 func main() {
+	// --- Auth & eKYC ---
+	citizenRepo := repository.NewMemoryCitizenRepository()
+	tokenRepo := repository.NewMemoryTokenRepository()
+	authService := service.NewAuthService(citizenRepo, tokenRepo, envOrDefault("GEMINI_API_KEY", ""))
 	providerDB := openProviderDatabase()
 	defer providerDB.Close()
 	providerService := service.NewProviderService(repository.NewPostgresProviderRepository(providerDB))
@@ -44,6 +48,7 @@ func main() {
 
 	// --- Single mux, all routes ---
 	mux := http.NewServeMux()
+	controller.NewAuthHandler(authService).RegisterRoutes(mux)
 	controller.NewAdminProjectHandler(projectService).RegisterRoutes(mux)
 	controller.NewOfficerClaimHandler(officerService).RegisterRoutes(mux)
 	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
