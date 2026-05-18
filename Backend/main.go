@@ -12,6 +12,11 @@ import (
 )
 
 func main() {
+	// --- Auth & eKYC ---
+	citizenRepo := repository.NewMemoryCitizenRepository()
+	tokenRepo := repository.NewMemoryTokenRepository()
+	authService := service.NewAuthService(citizenRepo, tokenRepo, envOrDefault("GEMINI_API_KEY", ""))
+
 	// --- Admin / Officer repos & services ---
 	projectRepo := repository.NewMemoryProjectRepository()
 	claimRepo := repository.NewMemoryOfficerClaimRepository()
@@ -35,6 +40,7 @@ func main() {
 
 	// --- Single mux, all routes ---
 	mux := http.NewServeMux()
+	controller.NewAuthHandler(authService).RegisterRoutes(mux)
 	controller.NewAdminProjectHandler(projectService).RegisterRoutes(mux)
 	controller.NewOfficerClaimHandler(officerService).RegisterRoutes(mux)
 	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
