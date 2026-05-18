@@ -75,6 +75,8 @@
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/v1/claim/:claimId/stream` | SSE — push สถานะ real-time ให้ frontend |
+
+Contract: [`docs/api/orchestrator-contract.md`](docs/api/orchestrator-contract.md)
 ---
 
 ## คนที่ 5 — ศุภวิชญ์ หงอสกุล 6609650053

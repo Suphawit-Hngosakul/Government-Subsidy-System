@@ -30,6 +30,18 @@ func main() {
 	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
 
 	log.Printf("government subsidy backend listening on :8080 (orchestrator=%s)", orchestratorURL)
+	repo := repository.NewMemoryClaimRepository()
+	orchestrator := service.NewOrchestratorService(
+		repo,
+		adapter.NewMockDOPAAdapter(),
+		adapter.NewMockSSOAdapter(),
+		adapter.NewMockKTBAdapter(),
+	)
+
+	mux := http.NewServeMux()
+	controller.NewOrchestratorHTTPHandler(orchestrator).RegisterRoutes(mux)
+
+	log.Println("government subsidy backend listening on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}
