@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	// --- Admin / Officer repos & services ---
 	projectRepo := repository.NewMemoryProjectRepository()
 	claimRepo := repository.NewMemoryOfficerClaimRepository()
 	auditRepo := repository.NewMemoryAuditRepository()
@@ -21,27 +22,25 @@ func main() {
 	orchestratorURL := envOrDefault("ORCHESTRATOR_BASE_URL", "http://localhost:8080")
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter(orchestratorURL)
 	officerService := service.NewOfficerService(claimRepo, orchestratorClient, auditRepo)
-
 	dashboardService := service.NewDashboardService(projectRepo, claimRepo, auditRepo)
 
-	mux := http.NewServeMux()
-	controller.NewAdminProjectHandler(projectService).RegisterRoutes(mux)
-	controller.NewOfficerClaimHandler(officerService).RegisterRoutes(mux)
-	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
-
-	log.Printf("government subsidy backend listening on :8080 (orchestrator=%s)", orchestratorURL)
-	repo := repository.NewMemoryClaimRepository()
-	orchestrator := service.NewOrchestratorService(
-		repo,
+	// --- Orchestrator repos & service ---
+	orchestratorRepo := repository.NewMemoryClaimRepository()
+	orchestratorService := service.NewOrchestratorService(
+		orchestratorRepo,
 		adapter.NewMockDOPAAdapter(),
 		adapter.NewMockSSOAdapter(),
 		adapter.NewMockKTBAdapter(),
 	)
 
+	// --- Single mux, all routes ---
 	mux := http.NewServeMux()
-	controller.NewOrchestratorHTTPHandler(orchestrator).RegisterRoutes(mux)
+	controller.NewAdminProjectHandler(projectService).RegisterRoutes(mux)
+	controller.NewOfficerClaimHandler(officerService).RegisterRoutes(mux)
+	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
+	controller.NewOrchestratorHTTPHandler(orchestratorService).RegisterRoutes(mux)
 
-	log.Println("government subsidy backend listening on :8080")
+	log.Printf("government subsidy backend listening on :8080 (orchestrator=%s)", orchestratorURL)
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}

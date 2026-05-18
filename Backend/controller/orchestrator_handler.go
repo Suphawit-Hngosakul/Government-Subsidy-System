@@ -10,6 +10,7 @@ import (
 	"government-subsidy-system/backend/service"
 )
 
+
 type OrchestratorHTTPHandler struct {
 	service *service.OrchestratorService
 }
@@ -106,16 +107,6 @@ func claimIDFromStreamPath(path string) (string, bool) {
 
 	claimID := strings.TrimSuffix(strings.TrimPrefix(path, prefix), suffix)
 	return claimID, claimID != "" && !strings.Contains(claimID, "/")
-}
-
-func writeJSON(w http.ResponseWriter, status int, payload any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(payload)
-}
-
-func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{"error": message})
 }
 
 func writeSSE(w http.ResponseWriter, event domain.StatusEvent) {
