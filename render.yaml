@@ -3,14 +3,14 @@
 # Spin up the entire multi-service stack with a single click on Render dashboard.
 # Reference: https://render.com/docs/blueprints
 # ------------------------------------------------------------------------------
-services:
+databases:
   # 1. Managed Postgres Database Instance
-  - type: database
-    name: gss-db
+  - name: gss-db
     databaseName: gss_provider
     user: gss_user
     plan: free
 
+services:
   # 2. Go Backend Web Service
   - type: web
     name: gss-backend
