@@ -14,9 +14,9 @@ services:
   # 2. Go Backend Web Service
   - type: web
     name: gss-backend
-    env: docker
+    runtime: docker
     dockerContext: Backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Backend/Dockerfile
     plan: free
     envVars:
       - key: PORT
@@ -33,9 +33,9 @@ services:
   # 3. Next.js Frontend Web Service
   - type: web
     name: gss-frontend
-    env: docker
+    runtime: docker
     dockerContext: Frontend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Frontend/Dockerfile
     plan: free
     envVars:
       - key: PORT
