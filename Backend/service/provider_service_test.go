@@ -67,3 +67,76 @@ func TestProviderServiceImplementsOrchestratorClients(t *testing.T) {
 		t.Fatalf("unexpected ktb result: %+v", ktb)
 	}
 }
+
+func TestProviderServiceAllMethods(t *testing.T) {
+	svc := NewProviderService(stubProviderRepository{})
+	ctx := context.Background()
+	nationalID := "1101700203451"
+
+	// DOPACardStatus
+	_, err := svc.DOPACardStatus(ctx, nationalID)
+	if err != nil {
+		t.Errorf("DOPACardStatus failed: %v", err)
+	}
+
+	// SSOStatus
+	_, err = svc.SSOStatus(ctx, nationalID)
+	if err != nil {
+		t.Errorf("SSOStatus failed: %v", err)
+	}
+
+	// SSOContribution
+	_, err = svc.SSOContribution(ctx, nationalID)
+	if err != nil {
+		t.Errorf("SSOContribution failed: %v", err)
+	}
+
+	// KTBFinancialCheck
+	_, err = svc.KTBFinancialCheck(ctx, nationalID)
+	if err != nil {
+		t.Errorf("KTBFinancialCheck failed: %v", err)
+	}
+
+	// KTBAccountStatus
+	_, err = svc.KTBAccountStatus(ctx, nationalID)
+	if err != nil {
+		t.Errorf("KTBAccountStatus failed: %v", err)
+	}
+}
+
+func TestProviderServiceValidateNationalIDErrors(t *testing.T) {
+	svc := NewProviderService(stubProviderRepository{})
+	ctx := context.Background()
+
+	// Empty ID
+	_, err := svc.VerifyDOPA(ctx, "")
+	if err != ErrNationalIDRequired {
+		t.Errorf("expected ErrNationalIDRequired, got %v", err)
+	}
+
+	_, err = svc.DOPACardStatus(ctx, "")
+	if err != ErrNationalIDRequired {
+		t.Errorf("expected ErrNationalIDRequired, got %v", err)
+	}
+
+	_, err = svc.SSOStatus(ctx, "")
+	if err != ErrNationalIDRequired {
+		t.Errorf("expected ErrNationalIDRequired, got %v", err)
+	}
+
+	_, err = svc.SSOContribution(ctx, "")
+	if err != ErrNationalIDRequired {
+		t.Errorf("expected ErrNationalIDRequired, got %v", err)
+	}
+
+	_, err = svc.KTBFinancialCheck(ctx, "")
+	if err != ErrNationalIDRequired {
+		t.Errorf("expected ErrNationalIDRequired, got %v", err)
+	}
+
+	_, err = svc.KTBAccountStatus(ctx, "")
+	if err != ErrNationalIDRequired {
+		t.Errorf("expected ErrNationalIDRequired, got %v", err)
+	}
+}
+

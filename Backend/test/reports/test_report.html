@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Government Subsidy System - Test & Coverage Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%);
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-hover-border: rgba(99, 102, 241, 0.3);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.2);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.2);
+            
+            --font-outfit: 'Outfit', sans-serif;
+            --font-inter: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: var(--bg-gradient);
+            color: var(--text-main);
+            font-family: var(--font-inter);
+            min-height: 100vh;
+            padding: 2.5rem 2rem;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+         
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1.5rem;
+        }
+
+        .header-title h1 {
+            font-family: var(--font-outfit);
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #ffffff, #c7d2fe, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .header-meta {
+            text-align: right;
+        }
+
+        .timestamp-badge {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-details {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+         
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-hover-border);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.1);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: transparent;
+        }
+
+        .card.primary::before { background: var(--primary-gradient); }
+        .card.success::before { background: var(--success); }
+        .card.warning::before { background: var(--warning); }
+        .card.danger::before { background: var(--danger); }
+
+        .card-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-family: var(--font-outfit);
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtext {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+         
+        .apdex-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .apdex-gauge-container {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .apdex-gauge-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+         
+        .tabs-container {
+            display: flex;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-outfit);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            border-bottom: 3px fill transparent;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: #818cf8;
+        }
+
+        .tab-btn.active::after {
+            background: var(--primary-gradient);
+        }
+
+         
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+         
+        .table-container {
+            overflow: hidden;
+            border-radius: 1rem;
+            border: 1px solid var(--card-border);
+            background: rgba(30, 41, 59, 0.25);
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 1.15rem 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 0.925rem;
+            color: var(--text-main);
+        }
+
+        tr.table-row-main {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        tr.table-row-main:hover {
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            max-width: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            height: 8px;
+            border-radius: 9999px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.75rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 1s ease-in-out;
+        }
+
+         
+        .cov-excellent { color: var(--success); }
+        .cov-tolerable { color: #60a5fa; }
+        .cov-poor { color: var(--danger); }
+
+        .bg-cov-excellent { background: var(--success); }
+        .bg-cov-tolerable { background: #60a5fa; }
+        .bg-cov-poor { background: var(--danger); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-excellent {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-tolerable {
+            background: rgba(96, 165, 250, 0.1);
+            color: #93c5fd;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+
+        .badge-poor {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+         
+        .expanded-row {
+            background: rgba(15, 23, 42, 0.4);
+            display: none;
+        }
+
+        .expanded-row.active {
+            display: table-row;
+        }
+
+        .detail-table-container {
+            padding: 1.5rem 2.5rem;
+        }
+
+        .detail-table-title {
+            font-family: var(--font-outfit);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #a5b4fc;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .inner-table {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 0.75rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .inner-table th {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.775rem;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .inner-table td {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+         
+        .log-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            padding: 0.65rem 1rem 0.65rem 2.5rem;
+            color: var(--text-main);
+            font-family: var(--font-inter);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            width: 16px;
+            height: 16px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+        }
+
+         
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pill-pass {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .pill-fail {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .log-output-container {
+            background: #020617;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-top: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            position: relative;
+        }
+
+        .log-output {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 350px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.35rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+         
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .heatmap-node {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 120px;
+            transition: all 0.2s ease;
+        }
+
+        .heatmap-node:hover {
+            transform: scale(1.02);
+            border-color: var(--card-hover-border);
+        }
+
+        .node-name {
+            font-family: var(--font-outfit);
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .node-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .node-pct {
+            font-family: var(--font-outfit);
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .node-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .node-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+         
+        .chevron {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        tr.table-row-main.open .chevron {
+            transform: rotate(90deg);
+            color: var(--primary);
+        }
+
+         
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <header>
+            <div class="header-title">
+                <h1>Government Subsidy System</h1>
+                <p>Interactive Service Test Cases & Statement Coverage Dashboard</p>
+            </div>
+            <div class="header-meta">
+                <span class="timestamp-badge">📅 Generated: Wed, 20 May 2026 02:17:34 &#43;07</span>
+                <div class="meta-details">OS: macOS | Environment: Backend | Go v1.22</div>
+            </div>
+        </header>
+
+        
+        <section class="widgets-grid">
+            
+            <div class="card primary apdex-card">
+                <div>
+                    <div class="card-label">Overall Apdex Score</div>
+                    <div class="card-value" style="font-size: 1.75rem; color: #a5b4fc;">
+                        90.6%
+                    </div>
+                    <div class="card-subtext">Pass Rate & Coverage Index</div>
+                </div>
+                <div class="apdex-gauge-container">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="rgba(255, 255, 255, 0.05)" stroke-width="8"></circle>
+                        <circle id="apdex-progress" cx="50" cy="50" r="40" fill="transparent" stroke="url(#apdexGrad)" stroke-width="8"
+                                stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"
+                                style="transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);"></circle>
+                        <defs>
+                            <linearGradient id="apdexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#818cf8"></stop>
+                                <stop offset="100%" stop-color="#34d399"></stop>
+                            </linearGradient>
+                        </defs>
+                        <text id="apdex-text" x="50" y="56" text-anchor="middle" font-family="var(--font-outfit)" font-weight="800" font-size="14" fill="#ffffff">0%</text>
+                    </svg>
+                </div>
+            </div>
+
+            
+            <div class="card success">
+                <div class="card-label">Test Case Pass Rate</div>
+                <div class="card-value" style="color: var(--success);">
+                    100.0%
+                </div>
+                <div class="card-subtext">
+                    71 / 71 Passed (0 Failed)
+                </div>
+            </div>
+
+            
+            <div class="card success">
+                <div class="card-label">Statement Coverage</div>
+                <div class="card-value" style="color: #34d399;">
+                    90.6%
+                </div>
+                <div class="card-subtext">
+                    336 / 371 Statements Covered
+                </div>
+            </div>
+
+            
+            <div class="card warning">
+                <div class="card-label">Total Execution Time</div>
+                <div class="card-value" style="color: var(--warning); font-size: 1.75rem;">
+                    20.00 ms
+                </div>
+                <div class="card-subtext">
+                    Avg: 0.28 ms | Max: 20.0 ms
+                </div>
+            </div>
+        </section>
+
+        
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Dashboard Overview
+            </button>
+            <button class="tab-btn" onclick="switchTab('logs')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Test Run Logs
+            </button>
+            <button class="tab-btn" onclick="switchTab('heatmap')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
+                Coverage Heatmap
+            </button>
+        </div>
+
+        
+        <div id="panel-dashboard" class="tab-panel active">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="40"></th>
+                            <th>Service File Name</th>
+                            <th>Covered Statements</th>
+                            <th>Total Statements</th>
+                            <th>Statement Coverage %</th>
+                            <th>Rating Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="files-table-body">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+        <div id="panel-logs" class="tab-panel">
+            <div class="log-controls">
+                <div class="search-bar">
+                    <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="log-search" class="search-input" placeholder="Search test cases by name or package..." oninput="filterTestCases()">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" id="btn-all" onclick="setTestFilter('ALL')">All</button>
+                    <button class="filter-btn" id="btn-pass" onclick="setTestFilter('PASS')" style="color: #34d399;">Passed</button>
+                    <button class="filter-btn" id="btn-fail" onclick="setTestFilter('FAIL')" style="color: #fca5a5;">Failed</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="40"></th>
+                            <th>Test Case Name</th>
+                            <th>Package / Domain</th>
+                            <th>Elapsed (ms)</th>
+                            <th width="120">Outcome</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+        <div id="panel-heatmap" class="tab-panel">
+            <div class="heatmap-grid" id="heatmap-container">
+                
+            </div>
+        </div>
+    </div>
+
+    
+    <script>
+        const reportData = {"Overall":{"TotalTests":71,"PassRate":100,"Failures":0,"TotalDurationMs":20,"AvgDurationMs":0.28169014084507044,"MinDurationMs":0,"MaxDurationMs":20,"TotalStatements":371,"CoveredStatements":336,"CoveragePercent":90.6,"ApdexScore":90.6},"Files":[{"FileName":"auth_service.go","CoveredStatements":65,"TotalStatements":73,"CoveragePercent":89.04109589041096,"Functions":[{"Name":"NewAuthService","Line":38,"CoveragePercent":100},{"Name":"Register","Line":42,"CoveragePercent":87.5},{"Name":"Login","Line":61,"CoveragePercent":90},{"Name":"Logout","Line":77,"CoveragePercent":100},{"Name":"ExtractOCR","Line":86,"CoveragePercent":100},{"Name":"ConfirmKYC","Line":109,"CoveragePercent":80},{"Name":"ValidateJWT","Line":120,"CoveragePercent":83.3},{"Name":"generateJWT","Line":158,"CoveragePercent":84.6},{"Name":"hashPassword","Line":181,"CoveragePercent":100},{"Name":"randomID","Line":186,"CoveragePercent":100}]},{"FileName":"benefit_service.go","CoveredStatements":48,"TotalStatements":51,"CoveragePercent":94.11764705882352,"Functions":[{"Name":"NewBenefitService","Line":22,"CoveragePercent":100},{"Name":"SubmitClaim","Line":35,"CoveragePercent":92.9},{"Name":"GetClaimStatus","Line":79,"CoveragePercent":100},{"Name":"GetClaimHistory","Line":117,"CoveragePercent":87.5},{"Name":"GetAvailableProjects","Line":158,"CoveragePercent":100}]},{"FileName":"dashboard_service.go","CoveredStatements":15,"TotalStatements":15,"CoveragePercent":100,"Functions":[{"Name":"NewDashboardService","Line":25,"CoveragePercent":100},{"Name":"Stats","Line":29,"CoveragePercent":100},{"Name":"AuditLog","Line":53,"CoveragePercent":100}]},{"FileName":"gemini_ocr.go","CoveredStatements":29,"TotalStatements":36,"CoveragePercent":80.55555555555556,"Functions":[{"Name":"callGeminiVision","Line":59,"CoveragePercent":74.1},{"Name":"extractJSONBlock","Line":130,"CoveragePercent":100}]},{"FileName":"officer_service.go","CoveredStatements":38,"TotalStatements":40,"CoveragePercent":95,"Functions":[{"Name":"NewOfficerService","Line":34,"CoveragePercent":100},{"Name":"ListPending","Line":38,"CoveragePercent":100},{"Name":"Detail","Line":42,"CoveragePercent":100},{"Name":"Approve","Line":67,"CoveragePercent":100},{"Name":"Reject","Line":71,"CoveragePercent":100},{"Name":"decide","Line":75,"CoveragePercent":90.9}]},{"FileName":"orchestrator_service.go","CoveredStatements":68,"TotalStatements":75,"CoveragePercent":90.66666666666666,"Functions":[{"Name":"NewOrchestratorService","Line":34,"CoveragePercent":100},{"Name":"Orchestrate","Line":38,"CoveragePercent":82.1},{"Name":"Decision","Line":101,"CoveragePercent":100},{"Name":"Events","Line":114,"CoveragePercent":100},{"Name":"Subscribe","Line":118,"CoveragePercent":100},{"Name":"publish","Line":122,"CoveragePercent":100},{"Name":"EvaluateDecision","Line":131,"CoveragePercent":100},{"Name":"decisionMessage","Line":170,"CoveragePercent":100}]},{"FileName":"project_service.go","CoveredStatements":33,"TotalStatements":36,"CoveragePercent":91.66666666666666,"Functions":[{"Name":"NewProjectService","Line":24,"CoveragePercent":100},{"Name":"Create","Line":28,"CoveragePercent":100},{"Name":"List","Line":46,"CoveragePercent":100},{"Name":"Get","Line":50,"CoveragePercent":83.3},{"Name":"Update","Line":61,"CoveragePercent":87.5},{"Name":"Delete","Line":90,"CoveragePercent":100},{"Name":"newProjectID","Line":97,"CoveragePercent":100}]},{"FileName":"provider_service.go","CoveredStatements":40,"TotalStatements":45,"CoveragePercent":88.88888888888889,"Functions":[{"Name":"NewProviderService","Line":23,"CoveragePercent":100},{"Name":"VerifyDOPA","Line":27,"CoveragePercent":100},{"Name":"DOPACardStatus","Line":34,"CoveragePercent":100},{"Name":"SSOStatus","Line":41,"CoveragePercent":100},{"Name":"SSOContribution","Line":48,"CoveragePercent":100},{"Name":"KTBFinancialCheck","Line":55,"CoveragePercent":100},{"Name":"KTBAccountStatus","Line":62,"CoveragePercent":100},{"Name":"Verify","Line":69,"CoveragePercent":75},{"Name":"Status","Line":82,"CoveragePercent":80},{"Name":"FinancialCheck","Line":102,"CoveragePercent":71.4},{"Name":"validateNationalID","Line":118,"CoveragePercent":100}]}],"TestCases":[{"Name":"TestSubmitClaimCreatesClaimAndTriggersOrchestrator","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestSubmitClaimCreatesClaimAndTriggersOrchestrator\n--- PASS: TestSubmitClaimCreatesClaimAndTriggersOrchestrator (0.00s)\n"},{"Name":"TestSubmitClaimRejectsEmptyNationalID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestSubmitClaimRejectsEmptyNationalID\n--- PASS: TestSubmitClaimRejectsEmptyNationalID (0.00s)\n"},{"Name":"TestSubmitClaimRejectsNonExistentProject","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestSubmitClaimRejectsNonExistentProject\n--- PASS: TestSubmitClaimRejectsNonExistentProject (0.00s)\n"},{"Name":"TestGetClaimStatusReturnsClaim","Package":"government-subsidy-system/backend/service","ElapsedMs":20,"Status":"PASS","Output":"=== RUN   TestGetClaimStatusReturnsClaim\n--- PASS: TestGetClaimStatusReturnsClaim (0.02s)\n"},{"Name":"TestGetClaimHistoryReturnsCitizensAllClaims","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestGetClaimHistoryReturnsCitizensAllClaims\n--- PASS: TestGetClaimHistoryReturnsCitizensAllClaims (0.00s)\n"},{"Name":"TestGetAvailableProjectsReturnOnlyActiveProjects","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestGetAvailableProjectsReturnOnlyActiveProjects\n--- PASS: TestGetAvailableProjectsReturnOnlyActiveProjects (0.00s)\n"},{"Name":"TestBenefitServiceErrors","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestBenefitServiceErrors\n--- PASS: TestBenefitServiceErrors (0.00s)\n"},{"Name":"TestGetClaimStatusAndHistoryWithDecision","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestGetClaimStatusAndHistoryWithDecision\n--- PASS: TestGetClaimStatusAndHistoryWithDecision (0.00s)\n"},{"Name":"TestDashboardServiceStatsCountsClaimsByStatus","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestDashboardServiceStatsCountsClaimsByStatus\n--- PASS: TestDashboardServiceStatsCountsClaimsByStatus (0.00s)\n"},{"Name":"TestDashboardServiceStatsCountsActiveProjects","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestDashboardServiceStatsCountsActiveProjects\n--- PASS: TestDashboardServiceStatsCountsActiveProjects (0.00s)\n"},{"Name":"TestDashboardServiceAuditLogReturnsNewestFirst","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestDashboardServiceAuditLogReturnsNewestFirst\n--- PASS: TestDashboardServiceAuditLogReturnsNewestFirst (0.00s)\n"},{"Name":"TestDashboardServiceAuditLogRespectsLimit","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestDashboardServiceAuditLogRespectsLimit\n--- PASS: TestDashboardServiceAuditLogRespectsLimit (0.00s)\n"},{"Name":"TestDashboardServiceAuditLogAppliesDefaultAndMaxLimits","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestDashboardServiceAuditLogAppliesDefaultAndMaxLimits\n--- PASS: TestDashboardServiceAuditLogAppliesDefaultAndMaxLimits (0.00s)\n"},{"Name":"TestExtractJSONBlock","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractJSONBlock\n--- PASS: TestExtractJSONBlock (0.00s)\n"},{"Name":"TestExtractJSONBlock/clean_braces","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractJSONBlock/clean_braces\n--- PASS: TestExtractJSONBlock/clean_braces (0.00s)\n"},{"Name":"TestExtractJSONBlock/markdown_json_block","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractJSONBlock/markdown_json_block\n--- PASS: TestExtractJSONBlock/markdown_json_block (0.00s)\n"},{"Name":"TestExtractJSONBlock/markdown_text_block","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractJSONBlock/markdown_text_block\n--- PASS: TestExtractJSONBlock/markdown_text_block (0.00s)\n"},{"Name":"TestExtractJSONBlock/surrounding_text","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractJSONBlock/surrounding_text\n--- PASS: TestExtractJSONBlock/surrounding_text (0.00s)\n"},{"Name":"TestExtractJSONBlock/no_braces","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractJSONBlock/no_braces\n--- PASS: TestExtractJSONBlock/no_braces (0.00s)\n"},{"Name":"TestOfficerServiceListPendingReturnsSeededClaims","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceListPendingReturnsSeededClaims\n--- PASS: TestOfficerServiceListPendingReturnsSeededClaims (0.00s)\n"},{"Name":"TestOfficerServiceDetailMergesClaimAndEligibility","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceDetailMergesClaimAndEligibility\n--- PASS: TestOfficerServiceDetailMergesClaimAndEligibility (0.00s)\n"},{"Name":"TestOfficerServiceDetailUnknownClaimReturnsNotFound","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceDetailUnknownClaimReturnsNotFound\n--- PASS: TestOfficerServiceDetailUnknownClaimReturnsNotFound (0.00s)\n"},{"Name":"TestOfficerServiceDetailReturnsNilEligibilityWhenOrchestratorHasNoDecision","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceDetailReturnsNilEligibilityWhenOrchestratorHasNoDecision\n--- PASS: TestOfficerServiceDetailReturnsNilEligibilityWhenOrchestratorHasNoDecision (0.00s)\n"},{"Name":"TestOfficerServiceDetailSwallowsOrchestratorErrorAndReturnsClaim","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceDetailSwallowsOrchestratorErrorAndReturnsClaim\n2026/05/20 02:09:33 officer: orchestrator unavailable for claim claim-001: network down\n--- PASS: TestOfficerServiceDetailSwallowsOrchestratorErrorAndReturnsClaim (0.00s)\n"},{"Name":"TestOfficerServiceDetailEmptyIDReturnsErrClaimIDRequired","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceDetailEmptyIDReturnsErrClaimIDRequired\n--- PASS: TestOfficerServiceDetailEmptyIDReturnsErrClaimIDRequired (0.00s)\n"},{"Name":"TestOfficerServiceDecideEmptyIDReturnsErrClaimIDRequired","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceDecideEmptyIDReturnsErrClaimIDRequired\n--- PASS: TestOfficerServiceDecideEmptyIDReturnsErrClaimIDRequired (0.00s)\n"},{"Name":"TestOfficerServiceApproveTransitionsPendingToApproved","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceApproveTransitionsPendingToApproved\n--- PASS: TestOfficerServiceApproveTransitionsPendingToApproved (0.00s)\n"},{"Name":"TestOfficerServiceApproveRequiresOfficerID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceApproveRequiresOfficerID\n--- PASS: TestOfficerServiceApproveRequiresOfficerID (0.00s)\n"},{"Name":"TestOfficerServiceRejectRequiresReason","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceRejectRequiresReason\n--- PASS: TestOfficerServiceRejectRequiresReason (0.00s)\n"},{"Name":"TestOfficerServiceRejectTransitionsPendingToRejected","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceRejectTransitionsPendingToRejected\n--- PASS: TestOfficerServiceRejectTransitionsPendingToRejected (0.00s)\n"},{"Name":"TestOfficerServiceCannotDecideAlreadyDecidedClaim","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceCannotDecideAlreadyDecidedClaim\n--- PASS: TestOfficerServiceCannotDecideAlreadyDecidedClaim (0.00s)\n"},{"Name":"TestOfficerServiceUnknownClaimDecisionReturnsNotFound","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceUnknownClaimDecisionReturnsNotFound\n--- PASS: TestOfficerServiceUnknownClaimDecisionReturnsNotFound (0.00s)\n"},{"Name":"TestOfficerServiceApproveAppendsAuditEntry","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceApproveAppendsAuditEntry\n--- PASS: TestOfficerServiceApproveAppendsAuditEntry (0.00s)\n"},{"Name":"TestOfficerServiceRejectAppendsAuditEntry","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceRejectAppendsAuditEntry\n--- PASS: TestOfficerServiceRejectAppendsAuditEntry (0.00s)\n"},{"Name":"TestOfficerServiceFailedDecisionDoesNotAppendAudit","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOfficerServiceFailedDecisionDoesNotAppendAudit\n--- PASS: TestOfficerServiceFailedDecisionDoesNotAppendAudit (0.00s)\n"},{"Name":"TestEvaluateDecisionApprovesEligibleClaim","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestEvaluateDecisionApprovesEligibleClaim\n--- PASS: TestEvaluateDecisionApprovesEligibleClaim (0.00s)\n"},{"Name":"TestEvaluateDecisionRejectsInvalidDOPA","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestEvaluateDecisionRejectsInvalidDOPA\n--- PASS: TestEvaluateDecisionRejectsInvalidDOPA (0.00s)\n"},{"Name":"TestOrchestrateStoresResultAndEvents","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOrchestrateStoresResultAndEvents\n--- PASS: TestOrchestrateStoresResultAndEvents (0.00s)\n"},{"Name":"TestOrchestratorDecisionEventsSubscribe","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOrchestratorDecisionEventsSubscribe\n--- PASS: TestOrchestratorDecisionEventsSubscribe (0.00s)\n"},{"Name":"TestEvaluateDecisionAllRules","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestEvaluateDecisionAllRules\n--- PASS: TestEvaluateDecisionAllRules (0.00s)\n"},{"Name":"TestProjectServiceCreatesProjectWithGeneratedID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceCreatesProjectWithGeneratedID\n--- PASS: TestProjectServiceCreatesProjectWithGeneratedID (0.00s)\n"},{"Name":"TestProjectServiceCreateAlwaysGeneratesServerSideID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceCreateAlwaysGeneratesServerSideID\n--- PASS: TestProjectServiceCreateAlwaysGeneratesServerSideID (0.00s)\n"},{"Name":"TestProjectServiceRejectsEmptyName","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceRejectsEmptyName\n--- PASS: TestProjectServiceRejectsEmptyName (0.00s)\n"},{"Name":"TestProjectServiceListReturnsCreatedProjects","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceListReturnsCreatedProjects\n--- PASS: TestProjectServiceListReturnsCreatedProjects (0.00s)\n"},{"Name":"TestProjectServiceUpdateMergesOnlyProvidedFields","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceUpdateMergesOnlyProvidedFields\n--- PASS: TestProjectServiceUpdateMergesOnlyProvidedFields (0.00s)\n"},{"Name":"TestProjectServiceUpdateRejectsEmptyName","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceUpdateRejectsEmptyName\n--- PASS: TestProjectServiceUpdateRejectsEmptyName (0.00s)\n"},{"Name":"TestProjectServiceUpdateUnknownReturnsNotFound","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceUpdateUnknownReturnsNotFound\n--- PASS: TestProjectServiceUpdateUnknownReturnsNotFound (0.00s)\n"},{"Name":"TestProjectServiceUpdateCanToggleActiveFalse","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceUpdateCanToggleActiveFalse\n--- PASS: TestProjectServiceUpdateCanToggleActiveFalse (0.00s)\n"},{"Name":"TestProjectServiceDeleteRemovesProject","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceDeleteRemovesProject\n--- PASS: TestProjectServiceDeleteRemovesProject (0.00s)\n"},{"Name":"TestProjectServiceDeleteUnknownReturnsNotFound","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceDeleteUnknownReturnsNotFound\n--- PASS: TestProjectServiceDeleteUnknownReturnsNotFound (0.00s)\n"},{"Name":"TestProjectServiceEmptyIDPathsReturnsErrProjectIDRequired","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProjectServiceEmptyIDPathsReturnsErrProjectIDRequired\n--- PASS: TestProjectServiceEmptyIDPathsReturnsErrProjectIDRequired (0.00s)\n"},{"Name":"TestProviderServiceRejectsInvalidNationalID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProviderServiceRejectsInvalidNationalID\n--- PASS: TestProviderServiceRejectsInvalidNationalID (0.00s)\n"},{"Name":"TestProviderServiceImplementsOrchestratorClients","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProviderServiceImplementsOrchestratorClients\n--- PASS: TestProviderServiceImplementsOrchestratorClients (0.00s)\n"},{"Name":"TestProviderServiceAllMethods","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProviderServiceAllMethods\n--- PASS: TestProviderServiceAllMethods (0.00s)\n"},{"Name":"TestProviderServiceValidateNationalIDErrors","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestProviderServiceValidateNationalIDErrors\n--- PASS: TestProviderServiceValidateNationalIDErrors (0.00s)\n"},{"Name":"TestRegister_Success","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestRegister_Success\n--- PASS: TestRegister_Success (0.00s)\n"},{"Name":"TestRegister_InvalidNationalID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestRegister_InvalidNationalID\n--- PASS: TestRegister_InvalidNationalID (0.00s)\n"},{"Name":"TestRegister_Duplicate","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestRegister_Duplicate\n--- PASS: TestRegister_Duplicate (0.00s)\n"},{"Name":"TestRegister_MissingPhone","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestRegister_MissingPhone\n--- PASS: TestRegister_MissingPhone (0.00s)\n"},{"Name":"TestLogin_Success","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestLogin_Success\n--- PASS: TestLogin_Success (0.00s)\n"},{"Name":"TestLogin_InvalidPassword","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestLogin_InvalidPassword\n--- PASS: TestLogin_InvalidPassword (0.00s)\n"},{"Name":"TestLogin_NotRegistered","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestLogin_NotRegistered\n--- PASS: TestLogin_NotRegistered (0.00s)\n"},{"Name":"TestLogout_Success","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestLogout_Success\n--- PASS: TestLogout_Success (0.00s)\n"},{"Name":"TestLogout_AlreadyRevoked","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestLogout_AlreadyRevoked\n--- PASS: TestLogout_AlreadyRevoked (0.00s)\n"},{"Name":"TestOCRMock_Success","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOCRMock_Success\n--- PASS: TestOCRMock_Success (0.00s)\n"},{"Name":"TestOCRMock_InvalidNationalID","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestOCRMock_InvalidNationalID\n--- PASS: TestOCRMock_InvalidNationalID (0.00s)\n"},{"Name":"TestConfirmKYC_Success","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestConfirmKYC_Success\n--- PASS: TestConfirmKYC_Success (0.00s)\n"},{"Name":"TestConfirmKYC_NotRegistered","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestConfirmKYC_NotRegistered\n--- PASS: TestConfirmKYC_NotRegistered (0.00s)\n"},{"Name":"TestValidateJWT_SuccessAndFail","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestValidateJWT_SuccessAndFail\n--- PASS: TestValidateJWT_SuccessAndFail (0.00s)\n"},{"Name":"TestExtractOCR_GeminiSuccess","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractOCR_GeminiSuccess\n--- PASS: TestExtractOCR_GeminiSuccess (0.00s)\n"},{"Name":"TestExtractOCR_GeminiErrorFallback","Package":"government-subsidy-system/backend/service","ElapsedMs":0,"Status":"PASS","Output":"=== RUN   TestExtractOCR_GeminiErrorFallback\n2026/05/20 02:09:33 [OCR] Gemini error: gemini API error: invalid key — using seed fallback\n--- PASS: TestExtractOCR_GeminiErrorFallback (0.00s)\n"}],"GeneratedTime":"Wed, 20 May 2026 02:17:34 +07"};
+        
+        console.log("Raw Report Data Loaded:", reportData);
+
+        
+        function getCoverageColorClass(pct) {
+            if (pct >= 90.0) return 'cov-excellent';
+            if (pct >= 80.0) return 'cov-tolerable';
+            return 'cov-poor';
+        }
+
+        function getCoverageBgClass(pct) {
+            if (pct >= 90.0) return 'bg-cov-excellent';
+            if (pct >= 80.0) return 'bg-cov-tolerable';
+            return 'bg-cov-poor';
+        }
+
+        function getCoverageBadge(pct) {
+            if (pct >= 90.0) return '<span class="badge badge-excellent">Excellent</span>';
+            if (pct >= 80.0) return '<span class="badge badge-tolerable">Tolerable</span>';
+            return '<span class="badge badge-poor">Needs Work</span>';
+        }
+
+        
+        function renderFilesTable() {
+            const tbody = document.getElementById('files-table-body');
+            tbody.innerHTML = '';
+
+            reportData.Files.forEach((file, index) => {
+                const colorClass = getCoverageColorClass(file.CoveragePercent);
+                const bgClass = getCoverageBgClass(file.CoveragePercent);
+                const badgeHtml = getCoverageBadge(file.CoveragePercent);
+
+                
+                const mainRow = document.createElement('tr');
+                mainRow.className = 'table-row-main';
+                mainRow.onclick = function() { toggleRowExpand(index); };
+                mainRow.id = 'file-row-' + index;
+                mainRow.innerHTML = 
+                    '<td align="center"><span class="chevron" id="chevron-' + index + '">▶</span></td>' +
+                    '<td style="font-weight: 600; font-family: var(--font-outfit);">' + file.FileName + '</td>' +
+                    '<td>' + file.CoveredStatements + '</td>' +
+                    '<td>' + file.TotalStatements + '</td>' +
+                    '<td>' +
+                        '<div class="progress-bar-container">' +
+                            '<div class="progress-bar-fill ' + bgClass + '" style="width: 0%"></div>' +
+                        '</div>' +
+                        '<span class="node-pct-val ' + colorClass + '" style="font-weight: 700;">' + file.CoveragePercent.toFixed(1) + '%</span>' +
+                    '</td>' +
+                    '<td>' + badgeHtml + '</td>';
+                tbody.appendChild(mainRow);
+
+                
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'expanded-row';
+                detailRow.id = 'file-detail-' + index;
+
+                let innerRows = '';
+                if (file.Functions && file.Functions.length > 0) {
+                    file.Functions.forEach(fn => {
+                        const fnColorClass = getCoverageColorClass(fn.CoveragePercent);
+                        const fnBgClass = getCoverageBgClass(fn.CoveragePercent);
+                        innerRows += 
+                            '<tr>' +
+                                '<td style="font-family: var(--font-mono); color: #c7d2fe;">' + fn.Name + '</td>' +
+                                '<td>Line ' + fn.Line + '</td>' +
+                                '<td>' +
+                                    '<div class="progress-bar-container" style="max-width: 150px; height: 6px;">' +
+                                        '<div class="progress-bar-fill ' + fnBgClass + '" style="width: ' + fn.CoveragePercent + '%"></div>' +
+                                    '</div>' +
+                                    '<span class="' + fnColorClass + '" style="font-weight: 600;">' + fn.CoveragePercent.toFixed(1) + '%</span>' +
+                                '</td>' +
+                            '</tr>';
+                    });
+                } else {
+                    innerRows = '<tr><td colspan="3" align="center" style="color: var(--text-muted); font-style: italic;">No function statistics available.</td></tr>';
+                }
+
+                detailRow.innerHTML = 
+                    '<td colspan="6">' +
+                        '<div class="detail-table-container">' +
+                            '<div class="detail-table-title">' +
+                                '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>' +
+                                ' Detailed Function Coverage: ' + file.FileName +
+                            '</div>' +
+                            '<table class="inner-table">' +
+                                '<thead>' +
+                                    '<tr>' +
+                                        '<th>Function Name</th>' +
+                                        '<th width="150">Start Line</th>' +
+                                        '<th width="300">Statement Coverage</th>' +
+                                    '</tr>' +
+                                '</thead>' +
+                                '<tbody>' +
+                                    innerRows +
+                                '</tbody>' +
+                            '</table>' +
+                        '</div>' +
+                    '</td>';
+                tbody.appendChild(detailRow);
+            });
+
+            
+            setTimeout(() => {
+                const fills = tbody.querySelectorAll('.table-row-main .progress-bar-fill');
+                reportData.Files.forEach((file, index) => {
+                    if (fills[index]) {
+                        fills[index].style.width = file.CoveragePercent + '%';
+                    }
+                });
+            }, 100);
+        }
+
+        function toggleRowExpand(index) {
+            const mainRow = document.getElementById('file-row-' + index);
+            const detailRow = document.getElementById('file-detail-' + index);
+            const chevron = document.getElementById('chevron-' + index);
+            
+            const isActive = detailRow.classList.contains('active');
+            
+            if (isActive) {
+                detailRow.classList.remove('active');
+                mainRow.classList.remove('open');
+            } else {
+                detailRow.classList.add('active');
+                mainRow.classList.add('open');
+            }
+        }
+
+        
+        function renderHeatmap() {
+            const container = document.getElementById('heatmap-container');
+            container.innerHTML = '';
+
+            reportData.Files.forEach(file => {
+                const colorClass = getCoverageColorClass(file.CoveragePercent);
+                const bgClass = getCoverageBgClass(file.CoveragePercent);
+
+                const node = document.createElement('div');
+                node.className = 'heatmap-node';
+                node.innerHTML = 
+                    '<div>' +
+                        '<div class="node-name" title="' + file.FileName + '">' + file.FileName + '</div>' +
+                        '<div style="color: var(--text-muted); font-size: 0.775rem;">' +
+                            'Statements: ' + file.CoveredStatements + '/' + file.TotalStatements +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="node-meta">' +
+                        '<div class="node-pct ' + colorClass + '">' + file.CoveragePercent.toFixed(0) + '%</div>' +
+                        '<div style="width: 50%;">' +
+                            '<div class="node-bar">' +
+                                '<div class="node-bar-fill ' + bgClass + '" style="width: ' + file.CoveragePercent + '%"></div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                container.appendChild(node);
+            });
+        }
+
+        
+        let currentFilter = 'ALL';
+
+        function renderTestLogs() {
+            const tbody = document.getElementById('logs-table-body');
+            tbody.innerHTML = '';
+            
+            const searchText = document.getElementById('log-search').value.toLowerCase();
+
+            let matchedIndex = 0;
+            reportData.TestCases.forEach((tc, idx) => {
+                
+                if (currentFilter === 'PASS' && tc.Status !== 'PASS') return;
+                if (currentFilter === 'FAIL' && tc.Status !== 'PASS' && tc.Status !== 'FAIL') {
+                    
+                }
+                if (currentFilter === 'FAIL' && tc.Status === 'PASS') return;
+
+                const nameMatch = tc.Name.toLowerCase().includes(searchText);
+                const pkgMatch = tc.Package.toLowerCase().includes(searchText);
+                if (!nameMatch && !pkgMatch) return;
+
+                const statusClass = tc.Status === 'PASS' ? 'pill-pass' : 'pill-fail';
+                
+                const mainRow = document.createElement('tr');
+                mainRow.className = 'table-row-main';
+                mainRow.onclick = function() { toggleLogExpand(idx); };
+                mainRow.id = 'log-row-' + idx;
+                mainRow.innerHTML = 
+                    '<td align="center"><span class="chevron" id="log-chevron-' + idx + '">▶</span></td>' +
+                    '<td style="font-weight: 600; color: #e2e8f0;">' + tc.Name + '</td>' +
+                    '<td style="color: var(--text-muted); font-size: 0.825rem; font-family: var(--font-mono);">' + tc.Package + '</td>' +
+                    '<td>' + tc.ElapsedMs.toFixed(2) + ' ms</td>' +
+                    '<td><span class="status-pill ' + statusClass + '">' + tc.Status + '</span></td>';
+                tbody.appendChild(mainRow);
+
+                
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'expanded-row';
+                detailRow.id = 'log-detail-' + idx;
+                
+                const cleanOutput = tc.Output ? tc.Output.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "No stdout captures generated for this test.";
+
+                detailRow.innerHTML = 
+                    '<td colspan="5">' +
+                        '<div class="detail-table-container">' +
+                            '<div class="log-output-container">' +
+                                '<button class="copy-btn" onclick="copyToClipboard(\'' + idx + '\')">Copy Output</button>' +
+                                '<pre class="log-output" id="log-pre-' + idx + '"><code>' + cleanOutput + '</code></pre>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>';
+                tbody.appendChild(detailRow);
+                matchedIndex++;
+            });
+
+            if (matchedIndex === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" align="center" style="padding: 2rem; color: var(--text-muted); font-style: italic;">No test cases found matching filters.</td></tr>';
+            }
+        }
+
+        function toggleLogExpand(index) {
+            const mainRow = document.getElementById('log-row-' + index);
+            const detailRow = document.getElementById('log-detail-' + index);
+            const chevron = document.getElementById('log-chevron-' + index);
+            
+            const isActive = detailRow.classList.contains('active');
+            
+            if (isActive) {
+                detailRow.classList.remove('active');
+                mainRow.classList.remove('open');
+            } else {
+                detailRow.classList.add('active');
+                mainRow.classList.add('open');
+            }
+        }
+
+        function copyToClipboard(index) {
+            const text = document.getElementById('log-pre-' + index).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('#log-detail-' + index + ' .copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = 'Copy Output';
+                }, 2000);
+            });
+        }
+
+        function filterTestCases() {
+            renderTestLogs();
+        }
+
+        function setTestFilter(status) {
+            currentFilter = status;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if (status === 'ALL') document.getElementById('btn-all').classList.add('active');
+            if (status === 'PASS') document.getElementById('btn-pass').classList.add('active');
+            if (status === 'FAIL') document.getElementById('btn-fail').classList.add('active');
+            
+            renderTestLogs();
+        }
+
+        
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+            activeBtn.classList.add('active');
+            
+            document.getElementById('panel-' + tabId).classList.add('active');
+        }
+
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            renderFilesTable();
+            renderTestLogs();
+            renderHeatmap();
+
+            
+            setTimeout(() => {
+                const apdexScore = reportData.Overall.ApdexScore;
+                const offset = 251.2 - (apdexScore / 100.0) * 251.2;
+                document.getElementById('apdex-progress').style.strokeDashoffset = offset;
+                
+                
+                let start = 0;
+                const duration = 1200; 
+                const stepTime = 15;
+                const totalSteps = duration / stepTime;
+                const increment = apdexScore / totalSteps;
+                
+                const timer = setInterval(() => {
+                    start += increment;
+                    if (start >= apdexScore) {
+                        document.getElementById('apdex-text').textContent = apdexScore.toFixed(0) + '%';
+                        clearInterval(timer);
+                    } else {
+                        document.getElementById('apdex-text').textContent = start.toFixed(0) + '%';
+                    }
+                }, stepTime);
+            }, 300);
+        });
+    </script>
+</body>
+</html>

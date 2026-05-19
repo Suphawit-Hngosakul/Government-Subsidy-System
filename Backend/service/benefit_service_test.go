@@ -196,3 +196,106 @@ func TestGetAvailableProjectsReturnOnlyActiveProjects(t *testing.T) {
 		t.Fatalf("expected 'Active Project', got '%s'", projects[0].Name)
 	}
 }
+
+func TestBenefitServiceErrors(t *testing.T) {
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
+	projectRepo := repository.NewMemoryProjectRepository()
+	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
+
+	svc := NewBenefitService(claimRepo, projectRepo, orchestratorClient)
+	ctx := context.Background()
+
+	// SubmitClaim missing project ID
+	_, err := svc.SubmitClaim(ctx, domain.BenefitClaimRequest{
+		NationalID: "1101700203451",
+		ProjectID:  "",
+	})
+	if err == nil || err.Error() != "projectId is required" {
+		t.Errorf("expected 'projectId is required', got %v", err)
+	}
+
+	// GetClaimStatus missing claim ID
+	_, err = svc.GetClaimStatus(ctx, "")
+	if err == nil || err.Error() != "claimId is required" {
+		t.Errorf("expected 'claimId is required', got %v", err)
+	}
+
+	// GetClaimStatus unknown claim ID (triggers repository error)
+	_, err = svc.GetClaimStatus(ctx, "unknown-claim")
+	if err == nil {
+		t.Error("expected error for unknown claim ID, got nil")
+	}
+
+	// GetClaimHistory missing national ID
+	_, err = svc.GetClaimHistory(ctx, "")
+	if err == nil || err.Error() != "nationalId is required" {
+		t.Errorf("expected 'nationalId is required', got %v", err)
+	}
+}
+
+type mockOrchestratorAdapter struct {
+	decision domain.EligibilityResult
+}
+
+func (m *mockOrchestratorAdapter) Orchestrate(ctx context.Context, claimID string, nationalID string, projectID string) error {
+	return nil
+}
+
+func (m *mockOrchestratorAdapter) GetDecision(ctx context.Context, claimID string) (domain.EligibilityResult, error) {
+	return m.decision, nil
+}
+
+func TestGetClaimStatusAndHistoryWithDecision(t *testing.T) {
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
+	projectRepo := repository.NewMemoryProjectRepository()
+	
+	decision := domain.EligibilityResult{
+		ClaimID: "claim-123",
+		Status:  domain.StatusApproved,
+		Reasons: []string{"eligible"},
+	}
+	mockOrch := &mockOrchestratorAdapter{decision: decision}
+
+	svc := NewBenefitService(claimRepo, projectRepo, mockOrch)
+	projectSvc := NewProjectService(projectRepo)
+	ctx := context.Background()
+
+	// Create project and claim
+	project, _ := projectSvc.Create(ctx, domain.ProjectInput{
+		Name:   "Active Project",
+		Active: true,
+	})
+
+	claim, err := claimRepo.Create(ctx, domain.Claim{
+		ID:         "claim-123",
+		NationalID: "1101700203451",
+		ProjectID:  project.ID,
+		Status:     domain.StatusProcessing,
+	})
+	if err != nil {
+		t.Fatalf("failed to create claim: %v", err)
+	}
+
+	// 1. GetClaimStatus with valid decision
+	resp, err := svc.GetClaimStatus(ctx, claim.ID)
+	if err != nil {
+		t.Fatalf("GetClaimStatus failed: %v", err)
+	}
+	if resp.Status != domain.StatusApproved {
+		t.Errorf("expected status Approved, got %s", resp.Status)
+	}
+
+	// 2. GetClaimHistory with valid decision
+	history, err := svc.GetClaimHistory(ctx, "1101700203451")
+	if err != nil {
+		t.Fatalf("GetClaimHistory failed: %v", err)
+	}
+	if len(history) != 1 {
+		t.Fatalf("expected 1 claim in history, got %d", len(history))
+	}
+	if history[0].Status != domain.StatusApproved {
+		t.Errorf("expected history claim status Approved, got %s", history[0].Status)
+	}
+}
+
+

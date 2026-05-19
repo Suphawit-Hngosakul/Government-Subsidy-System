@@ -1,12 +1,22 @@
 package service_test
 
 import (
+	"bytes"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
 	"government-subsidy-system/backend/domain"
 	"government-subsidy-system/backend/repository"
 	"government-subsidy-system/backend/service"
 )
+
+type roundTripFunc func(req *http.Request) *http.Response
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
 
 func newAuthService() service.AuthService {
 	return service.NewAuthService(
@@ -203,3 +213,115 @@ func TestConfirmKYC_NotRegistered(t *testing.T) {
 		t.Fatal("expected error for unknown citizen")
 	}
 }
+
+func TestValidateJWT_SuccessAndFail(t *testing.T) {
+	svc := newAuthService()
+	_ = svc.Register(domain.RegisterRequest{
+		NationalID: "1234567890123",
+		Password:   "password123",
+		Phone:      "0812345678",
+	})
+	resp, err := svc.Login(domain.LoginRequest{
+		NationalID: "1234567890123",
+		Password:   "password123",
+	})
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	// Validate valid token
+	citizenID, role, err := service.ValidateJWT(resp.Token)
+	if err != nil {
+		t.Fatalf("failed to validate JWT: %v", err)
+	}
+	if role != "citizen" {
+		t.Errorf("expected role 'citizen', got '%s'", role)
+	}
+	if citizenID == "" {
+		t.Error("expected citizenID to be non-empty")
+	}
+
+	// Validate invalid token
+	_, _, err = service.ValidateJWT("invalid-token-format")
+	if err == nil {
+		t.Error("expected error for invalid token format, got nil")
+	}
+
+	// Validate token with wrong signature
+	parts := strings.Split(resp.Token, ".")
+	if len(parts) == 3 {
+		fakeToken := parts[0] + "." + parts[1] + ".fakesig"
+		_, _, err = service.ValidateJWT(fakeToken)
+		if err == nil {
+			t.Error("expected error for invalid signature, got nil")
+		}
+	}
+}
+
+func TestExtractOCR_GeminiSuccess(t *testing.T) {
+	oldTransport := http.DefaultClient.Transport
+	defer func() { http.DefaultClient.Transport = oldTransport }()
+
+	mockResponseJSON := `{
+		"candidates": [{
+			"content": {
+				"parts": [{
+					"text": "{\n  \"nationalId\": \"1234567890123\",\n  \"fullName\": \"นายสมชาย เข็มทอง\",\n  \"dateOfBirth\": \"01/01/2500\",\n  \"laserCode\": \"JT9-9999999-99\",\n  \"address\": \"123 หมู่ 1\"\n}"
+				}]
+			}
+		}]
+	}`
+
+	http.DefaultClient.Transport = roundTripFunc(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(mockResponseJSON)),
+			Header:     make(http.Header),
+		}
+	})
+
+
+	svc := service.NewAuthService(
+		repository.NewMemoryCitizenRepository(),
+		repository.NewMemoryTokenRepository(),
+		"mock-gemini-key",
+	)
+
+	result, err := svc.ExtractOCR([]byte("fake-image-bytes"), "image/jpeg", "1234567890123")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if result.FullName != "นายสมชาย เข็มทอง" || result.NationalID != "1234567890123" {
+		t.Errorf("unexpected ocr result: %+v", result)
+	}
+}
+
+func TestExtractOCR_GeminiErrorFallback(t *testing.T) {
+	oldTransport := http.DefaultClient.Transport
+	defer func() { http.DefaultClient.Transport = oldTransport }()
+
+	http.DefaultClient.Transport = roundTripFunc(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"error": {"message": "invalid key"}}`)),
+			Header:     make(http.Header),
+		}
+	})
+
+	svc := service.NewAuthService(
+		repository.NewMemoryCitizenRepository(),
+		repository.NewMemoryTokenRepository(),
+		"invalid-gemini-key",
+	)
+
+	result, err := svc.ExtractOCR([]byte("fake-image-bytes"), "image/jpeg", "1234567890123")
+	if err != nil {
+		t.Fatalf("expected fallback to work, got error: %v", err)
+	}
+
+	if result.FullName != "นาย ทดสอบ ระบบ" {
+		t.Errorf("expected fallback to seed ocr, got: %+v", result)
+	}
+}
+
