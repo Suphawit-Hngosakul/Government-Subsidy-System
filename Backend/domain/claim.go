@@ -37,7 +37,7 @@ type OfficerClaimDetail struct {
 
 type EligibilityResult struct {
 	ClaimID string             `json:"claimId"`
-	Status  string             `json:"status"`
+	Status  ClaimStatus        `json:"status"`
 	Reasons []string           `json:"reasons"`
 	Sources EligibilitySources `json:"sources"`
 }
