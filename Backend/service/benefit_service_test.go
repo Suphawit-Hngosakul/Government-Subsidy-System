@@ -10,7 +10,7 @@ import (
 )
 
 func TestSubmitClaimCreatesClaimAndTriggersOrchestrator(t *testing.T) {
-	claimRepo := repository.NewMemoryBenefitClaimRepository()
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
 	projectRepo := repository.NewMemoryProjectRepository()
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
 
@@ -52,7 +52,7 @@ func TestSubmitClaimCreatesClaimAndTriggersOrchestrator(t *testing.T) {
 }
 
 func TestSubmitClaimRejectsEmptyNationalID(t *testing.T) {
-	claimRepo := repository.NewMemoryBenefitClaimRepository()
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
 	projectRepo := repository.NewMemoryProjectRepository()
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
 
@@ -69,7 +69,7 @@ func TestSubmitClaimRejectsEmptyNationalID(t *testing.T) {
 }
 
 func TestSubmitClaimRejectsNonExistentProject(t *testing.T) {
-	claimRepo := repository.NewMemoryBenefitClaimRepository()
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
 	projectRepo := repository.NewMemoryProjectRepository()
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
 
@@ -89,7 +89,7 @@ func TestSubmitClaimRejectsNonExistentProject(t *testing.T) {
 }
 
 func TestGetClaimStatusReturnsClaim(t *testing.T) {
-	claimRepo := repository.NewMemoryBenefitClaimRepository()
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
 	projectRepo := repository.NewMemoryProjectRepository()
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
 
@@ -129,7 +129,7 @@ func TestGetClaimStatusReturnsClaim(t *testing.T) {
 }
 
 func TestGetClaimHistoryReturnsCitizensAllClaims(t *testing.T) {
-	claimRepo := repository.NewMemoryBenefitClaimRepository()
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
 	projectRepo := repository.NewMemoryProjectRepository()
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
 
@@ -171,7 +171,7 @@ func TestGetClaimHistoryReturnsCitizensAllClaims(t *testing.T) {
 }
 
 func TestGetAvailableProjectsReturnOnlyActiveProjects(t *testing.T) {
-	claimRepo := repository.NewMemoryBenefitClaimRepository()
+	claimRepo := repository.NewMemoryBenefitClaimRepository(nil)
 	projectRepo := repository.NewMemoryProjectRepository()
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter("http://localhost:8080")
 

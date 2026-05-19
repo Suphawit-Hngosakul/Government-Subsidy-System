@@ -25,11 +25,15 @@ type BenefitClaimRepository interface {
 type MemoryBenefitClaimRepository struct {
 	mu     sync.RWMutex
 	claims map[string]domain.Claim
+
+	// Bridge to sync data with Officer feature
+	officerRepo OfficerClaimRepository
 }
 
-func NewMemoryBenefitClaimRepository() *MemoryBenefitClaimRepository {
+func NewMemoryBenefitClaimRepository(officerRepo OfficerClaimRepository) *MemoryBenefitClaimRepository {
 	return &MemoryBenefitClaimRepository{
-		claims: make(map[string]domain.Claim),
+		claims:      make(map[string]domain.Claim),
+		officerRepo: officerRepo,
 	}
 }
 
@@ -43,6 +47,29 @@ func (r *MemoryBenefitClaimRepository) Create(ctx context.Context, claim domain.
 	claim.Status = domain.StatusProcessing
 
 	r.claims[claim.ID] = claim
+
+	// --- Bridge: Sync to Officer Repository ---
+	if r.officerRepo != nil {
+		officerClaim := domain.OfficerClaim{
+			ClaimID:     claim.ID,
+			NationalID:  claim.NationalID,
+			ProjectID:   claim.ProjectID,
+			Status:      domain.OfficerStatusPending, // All new claims wait for Orchestrator/Officer
+			SubmittedAt: claim.SubmittedAt,
+		}
+		// Since OfficerRepo.Update acts as an insert/update in memory, we might need a direct insert.
+		// For the existing mock repo, Update checks existence. Let's add it directly if we must,
+		// or rely on a new method. Wait, OfficerRepo currently returns ErrOfficerClaimNotFound on Update if not exists.
+		// Let's modify the Update behavior in Officer Repo or add a Create method to it.
+		// Alternatively, we can cast it to the concrete type and insert directly.
+		if memoryRepo, ok := r.officerRepo.(*MemoryOfficerClaimRepository); ok {
+			memoryRepo.mu.Lock()
+			memoryRepo.claims[claim.ID] = officerClaim
+			memoryRepo.mu.Unlock()
+		}
+	}
+	// ------------------------------------------
+
 	return claim, nil
 }
 

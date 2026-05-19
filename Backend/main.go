@@ -38,7 +38,7 @@ func main() {
 	dashboardService := service.NewDashboardService(projectRepo, officerClaimRepo, auditRepo)
 
 	// --- Benefit (Citizen) repos & services ---
-	benefitClaimRepo := repository.NewMemoryBenefitClaimRepository()
+	benefitClaimRepo := repository.NewMemoryBenefitClaimRepository(officerClaimRepo)
 	benefitService := service.NewBenefitService(benefitClaimRepo, projectRepo, orchestratorClient)
 
 	// --- Orchestrator repos & service ---
