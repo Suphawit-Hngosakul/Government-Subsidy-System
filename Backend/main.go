@@ -27,15 +27,19 @@ func main() {
 
 	// --- Admin / Officer repos & services ---
 	projectRepo := repository.NewMemoryProjectRepository()
-	claimRepo := repository.NewMemoryOfficerClaimRepository()
+	officerClaimRepo := repository.NewMemoryOfficerClaimRepository()
 	auditRepo := repository.NewMemoryAuditRepository()
 
 	projectService := service.NewProjectService(projectRepo)
 
 	orchestratorURL := envOrDefault("ORCHESTRATOR_BASE_URL", "http://localhost:8080")
 	orchestratorClient := adapter.NewHTTPOrchestratorAdapter(orchestratorURL)
-	officerService := service.NewOfficerService(claimRepo, orchestratorClient, auditRepo)
-	dashboardService := service.NewDashboardService(projectRepo, claimRepo, auditRepo)
+	officerService := service.NewOfficerService(officerClaimRepo, orchestratorClient, auditRepo)
+	dashboardService := service.NewDashboardService(projectRepo, officerClaimRepo, auditRepo)
+
+	// --- Benefit (Citizen) repos & services ---
+	benefitClaimRepo := repository.NewMemoryBenefitClaimRepository()
+	benefitService := service.NewBenefitService(benefitClaimRepo, projectRepo, orchestratorClient)
 
 	// --- Orchestrator repos & service ---
 	orchestratorRepo := repository.NewMemoryClaimRepository()
@@ -54,6 +58,7 @@ func main() {
 	controller.NewAdminDashboardHandler(dashboardService).RegisterRoutes(mux)
 	controller.NewProviderHandler(providerService).RegisterRoutes(mux)
 	controller.NewOrchestratorHTTPHandler(orchestratorService).RegisterRoutes(mux)
+	controller.NewBenefitHandler(benefitService).RegisterRoutes(mux)
 
 	log.Printf("government subsidy backend listening on :8080 (orchestrator=%s)", orchestratorURL)
 	if err := http.ListenAndServe(":8080", mux); err != nil {
