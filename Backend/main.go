@@ -60,8 +60,9 @@ func main() {
 	controller.NewOrchestratorHTTPHandler(orchestratorService).RegisterRoutes(mux)
 	controller.NewBenefitHandler(benefitService).RegisterRoutes(mux)
 
-	log.Printf("government subsidy backend listening on :8080 (orchestrator=%s)", orchestratorURL)
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	port := envOrDefault("PORT", "8080")
+	log.Printf("government subsidy backend listening on :%s (orchestrator=%s)", port, orchestratorURL)
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		log.Fatal(err)
 	}
 }
