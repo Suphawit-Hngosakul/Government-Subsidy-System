@@ -25,14 +25,27 @@ type KTBClient interface {
 }
 
 type OrchestratorService struct {
-	repo repository.ClaimRepository
-	dopa DOPAClient
-	sso  SSOClient
-	ktb  KTBClient
+	repo        repository.ClaimRepository
+	projectRepo repository.ProjectRepository
+	dopa        DOPAClient
+	sso         SSOClient
+	ktb         KTBClient
 }
 
-func NewOrchestratorService(repo repository.ClaimRepository, dopa DOPAClient, sso SSOClient, ktb KTBClient) *OrchestratorService {
-	return &OrchestratorService{repo: repo, dopa: dopa, sso: sso, ktb: ktb}
+func NewOrchestratorService(
+	repo repository.ClaimRepository,
+	projectRepo repository.ProjectRepository,
+	dopa DOPAClient,
+	sso SSOClient,
+	ktb KTBClient,
+) *OrchestratorService {
+	return &OrchestratorService{
+		repo:        repo,
+		projectRepo: projectRepo,
+		dopa:        dopa,
+		sso:         sso,
+		ktb:         ktb,
+	}
 }
 
 func (s *OrchestratorService) Orchestrate(ctx context.Context, req domain.OrchestrateRequest) (domain.DecisionResult, error) {
@@ -45,6 +58,26 @@ func (s *OrchestratorService) Orchestrate(ctx context.Context, req domain.Orches
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
+	var criteria domain.ProjectCriteria
+	hasProject := false
+	if req.ProjectID != "" && s.projectRepo != nil {
+		if proj, ok := s.projectRepo.Get(ctx, req.ProjectID); ok {
+			criteria = proj.Criteria
+			hasProject = true
+		}
+	}
+
+	// Default fallback for backward compatibility
+	if !hasProject {
+		criteria = domain.ProjectCriteria{
+			MinAge:           18,
+			MaxMonthlyIncome: 30000,
+			RequirePromptPay: true,
+			RequireSSO:       true,
+			RequireKTB:       true,
+		}
+	}
+
 	var (
 		wg      sync.WaitGroup
 		sources domain.EligibilitySources
@@ -52,7 +85,8 @@ func (s *OrchestratorService) Orchestrate(ctx context.Context, req domain.Orches
 		mu      sync.Mutex
 	)
 
-	wg.Add(3)
+	// DOPA is always checked
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		result, err := s.dopa.Verify(ctx, req.NationalID)
@@ -65,33 +99,41 @@ func (s *OrchestratorService) Orchestrate(ctx context.Context, req domain.Orches
 		sources.DOPA = result
 	}()
 
-	go func() {
-		defer wg.Done()
-		result, err := s.sso.Status(ctx, req.NationalID)
-		mu.Lock()
-		defer mu.Unlock()
-		if err != nil {
-			errs = append(errs, "SSO status unavailable")
-			return
-		}
-		sources.SSO = result
-	}()
+	// Query SSO only if required
+	if criteria.RequireSSO {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			result, err := s.sso.Status(ctx, req.NationalID)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				errs = append(errs, "SSO status unavailable")
+				return
+			}
+			sources.SSO = result
+		}()
+	}
 
-	go func() {
-		defer wg.Done()
-		result, err := s.ktb.FinancialCheck(ctx, req.NationalID)
-		mu.Lock()
-		defer mu.Unlock()
-		if err != nil {
-			errs = append(errs, "KTB financial check unavailable")
-			return
-		}
-		sources.KTB = result
-	}()
+	// Query KTB only if required
+	if criteria.RequireKTB {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			result, err := s.ktb.FinancialCheck(ctx, req.NationalID)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				errs = append(errs, "KTB financial check unavailable")
+				return
+			}
+			sources.KTB = result
+		}()
+	}
 
 	wg.Wait()
 
-	decision := EvaluateDecision(req.ClaimID, sources, errs)
+	decision := EvaluateDecisionWithCriteria(req.ClaimID, sources, errs, criteria)
 	s.repo.SaveResult(decision)
 	s.publish(req.ClaimID, decision.Status, decisionMessage(decision))
 
@@ -129,34 +171,85 @@ func (s *OrchestratorService) publish(claimID string, status domain.ClaimStatus,
 }
 
 func EvaluateDecision(claimID string, sources domain.EligibilitySources, providerErrors []string) domain.DecisionResult {
+	defaultCriteria := domain.ProjectCriteria{
+		MinAge:           18,
+		MaxMonthlyIncome: 30000,
+		RequirePromptPay: true,
+		RequireSSO:       true,
+		RequireKTB:       true,
+	}
+	return EvaluateDecisionWithCriteria(claimID, sources, providerErrors, defaultCriteria)
+}
+
+func EvaluateDecisionWithCriteria(claimID string, sources domain.EligibilitySources, providerErrors []string, criteria domain.ProjectCriteria) domain.DecisionResult {
 	reasons := append([]string{}, providerErrors...)
 	status := domain.StatusApproved
 
 	if len(providerErrors) > 0 {
 		status = domain.StatusPending
 	}
+
+	// 1. DOPA Verification rules
 	if !sources.DOPA.Valid || !sources.DOPA.Alive || !sources.DOPA.CardActive {
 		status = domain.StatusRejected
 		reasons = append(reasons, "citizen identity is invalid or inactive")
 	}
-	if sources.DOPA.Age < 18 {
+
+	minAge := criteria.MinAge
+	if minAge == 0 {
+		minAge = 18
+	}
+	if sources.DOPA.Age < minAge {
 		status = domain.StatusRejected
 		reasons = append(reasons, "citizen age is below minimum requirement")
 	}
-	if sources.SSO.Section == "33" {
+
+	if criteria.MaxAge > 0 && sources.DOPA.Age > criteria.MaxAge {
 		status = domain.StatusRejected
-		reasons = append(reasons, "citizen is insured under SSO section 33")
+		reasons = append(reasons, "citizen age exceeds maximum requirement")
 	}
-	if !sources.KTB.PromptPayLinked {
-		status = domain.StatusPending
-		reasons = append(reasons, "PromptPay account is not linked")
+
+	// 2. SSO rules (only if required)
+	if criteria.RequireSSO {
+		if len(criteria.AllowedSSOSections) > 0 {
+			allowed := false
+			for _, sec := range criteria.AllowedSSOSections {
+				if sources.SSO.Section == sec {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				status = domain.StatusRejected
+				reasons = append(reasons, "citizen is insured under a restricted SSO section")
+			}
+		} else {
+			// Backward compatible default behavior
+			if sources.SSO.Section == "33" {
+				status = domain.StatusRejected
+				reasons = append(reasons, "citizen is insured under SSO section 33")
+			}
+		}
 	}
-	if sources.KTB.AverageMonthlyIncome > 30000 {
-		status = domain.StatusRejected
-		reasons = append(reasons, "average monthly income exceeds threshold")
+
+	// 3. KTB rules (only if required)
+	if criteria.RequireKTB {
+		if criteria.RequirePromptPay && !sources.KTB.PromptPayLinked {
+			status = domain.StatusPending
+			reasons = append(reasons, "PromptPay account is not linked")
+		}
+		if criteria.MaxMonthlyIncome > 0 && sources.KTB.AverageMonthlyIncome > criteria.MaxMonthlyIncome {
+			status = domain.StatusRejected
+			reasons = append(reasons, "average monthly income exceeds threshold")
+		}
+		if criteria.MaxDepositTotal > 0 && sources.KTB.DepositTotal > criteria.MaxDepositTotal {
+			status = domain.StatusRejected
+			reasons = append(reasons, "bank deposit balance exceeds threshold")
+		}
 	}
+
 	if len(reasons) == 0 {
-		reasons = append(reasons, "eligible by mock subsidy rules")
+		reasons = append(reasons, "eligible under project criteria rules")
 	}
 
 	return domain.DecisionResult{

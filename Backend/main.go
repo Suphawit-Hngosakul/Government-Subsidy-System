@@ -45,6 +45,7 @@ func main() {
 	orchestratorRepo := repository.NewMemoryClaimRepository()
 	orchestratorService := service.NewOrchestratorService(
 		orchestratorRepo,
+		projectRepo,
 		providerService,
 		providerService,
 		providerService,

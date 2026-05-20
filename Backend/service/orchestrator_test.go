@@ -2,12 +2,25 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"government-subsidy-system/backend/adapter"
 	"government-subsidy-system/backend/domain"
 	"government-subsidy-system/backend/repository"
 )
+
+type errorSSOClient struct{}
+
+func (errorSSOClient) Status(ctx context.Context, nationalID string) (domain.SSOResult, error) {
+	return domain.SSOResult{}, errors.New("SSO down")
+}
+
+type errorKTBClient struct{}
+
+func (errorKTBClient) FinancialCheck(ctx context.Context, nationalID string) (domain.KTBResult, error) {
+	return domain.KTBResult{}, errors.New("KTB down")
+}
 
 func TestEvaluateDecisionApprovesEligibleClaim(t *testing.T) {
 	result := EvaluateDecision("claim-1", domain.EligibilitySources{
@@ -35,8 +48,10 @@ func TestEvaluateDecisionRejectsInvalidDOPA(t *testing.T) {
 
 func TestOrchestrateStoresResultAndEvents(t *testing.T) {
 	repo := repository.NewMemoryClaimRepository()
+	projectRepo := repository.NewMemoryProjectRepository()
 	svc := NewOrchestratorService(
 		repo,
+		projectRepo,
 		adapter.NewMockDOPAAdapter(),
 		adapter.NewMockSSOAdapter(),
 		adapter.NewMockKTBAdapter(),
@@ -69,8 +84,10 @@ func TestOrchestrateStoresResultAndEvents(t *testing.T) {
 
 func TestOrchestratorDecisionEventsSubscribe(t *testing.T) {
 	repo := repository.NewMemoryClaimRepository()
+	projectRepo := repository.NewMemoryProjectRepository()
 	svc := NewOrchestratorService(
 		repo,
+		projectRepo,
 		adapter.NewMockDOPAAdapter(),
 		adapter.NewMockSSOAdapter(),
 		adapter.NewMockKTBAdapter(),
@@ -146,7 +163,6 @@ func TestEvaluateDecisionAllRules(t *testing.T) {
 		t.Errorf("expected Rejected for SSO Section 33, got %s", r3.Status)
 	}
 
-
 	// Rule: PromptPay not linked
 	r4 := EvaluateDecision("claim-1", domain.EligibilitySources{
 		DOPA: domain.DOPAResult{Valid: true, Alive: true, CardActive: true, Age: 25},
@@ -181,6 +197,123 @@ func TestEvaluateDecisionAllRules(t *testing.T) {
 	m3 := decisionMessage(domain.DecisionResult{Status: domain.StatusPending})
 	if m3 != "claim requires follow-up" {
 		t.Errorf("expected claim requires follow-up, got %s", m3)
+	}
+}
+
+// TestOrchestrateSelectiveQueries verifies that SSO and KTB integrations are skipped if not required,
+// avoiding errors even if their downstream service adaptors fail.
+func TestOrchestrateSelectiveQueries(t *testing.T) {
+	repo := repository.NewMemoryClaimRepository()
+	projectRepo := repository.NewMemoryProjectRepository()
+
+	// 1. Setup a project that does NOT require SSO or KTB checks
+	ctx := context.Background()
+	_, _ = projectRepo.Create(ctx, domain.Project{
+		ID:     "proj-selective",
+		Name:   "Selective Subsidy",
+		Active: true,
+		Criteria: domain.ProjectCriteria{
+			MinAge:           18,
+			RequirePromptPay: false,
+			RequireSSO:       false,
+			RequireKTB:       false,
+		},
+	})
+
+	// 2. Setup service with error-prone SSO and KTB clients
+	svc := NewOrchestratorService(
+		repo,
+		projectRepo,
+		adapter.NewMockDOPAAdapter(),
+		errorSSOClient{},
+		errorKTBClient{},
+	)
+
+	// 3. Orchestrate with selective project criteria
+	result, err := svc.Orchestrate(ctx, domain.OrchestrateRequest{
+		ClaimID:    "claim-selective",
+		NationalID: "1101700203451",
+		ProjectID:  "proj-selective",
+	})
+	if err != nil {
+		t.Fatalf("orchestrate returned error: %v", err)
+	}
+
+	// 4. Assert orchestration succeeds and remains Approved (since error-prone clients were bypassed)
+	if result.Status != domain.StatusApproved {
+		t.Fatalf("expected status %s since SSO/KTB were bypassed, got %s (reasons: %v)", domain.StatusApproved, result.Status, result.Reasons)
+	}
+}
+
+// TestEvaluateDecisionWithCustomCriteria verifies diverse and customizable rule limits:
+// 1. Custom age boundaries (e.g. MinAge: 16, MaxAge: 60)
+// 2. Custom financial limits (e.g. MaxDepositTotal: 400000, MaxMonthlyIncome: 50000)
+// 3. Whitelisted SSO sections (e.g. AllowedSSOSections: ["39", "40"])
+func TestEvaluateDecisionWithCustomCriteria(t *testing.T) {
+	criteria := domain.ProjectCriteria{
+		MinAge:           16,
+		MaxAge:           60,
+		RequirePromptPay: true,
+		RequireSSO:       true,
+		RequireKTB:       true,
+		MaxMonthlyIncome: 50000,
+		MaxDepositTotal:  400000,
+		AllowedSSOSections: []string{"39", "40"},
+	}
+
+	// Case 1: Approved - satisfies all custom criteria
+	sources1 := domain.EligibilitySources{
+		DOPA: domain.DOPAResult{Valid: true, Age: 16, Alive: true, CardActive: true},
+		SSO:  domain.SSOResult{Section: "40", ContributionMonths: 12},
+		KTB:  domain.KTBResult{DepositTotal: 399999, AverageMonthlyIncome: 45000, PromptPayLinked: true},
+	}
+	r1 := EvaluateDecisionWithCriteria("claim-c1", sources1, nil, criteria)
+	if r1.Status != domain.StatusApproved {
+		t.Errorf("expected Approved, got %s (reasons: %v)", r1.Status, r1.Reasons)
+	}
+
+	// Case 2: Rejected - Under 16 (Age 15)
+	sources2 := domain.EligibilitySources{
+		DOPA: domain.DOPAResult{Valid: true, Age: 15, Alive: true, CardActive: true},
+		SSO:  domain.SSOResult{Section: "40"},
+		KTB:  domain.KTBResult{DepositTotal: 10000, AverageMonthlyIncome: 10000, PromptPayLinked: true},
+	}
+	r2 := EvaluateDecisionWithCriteria("claim-c2", sources2, nil, criteria)
+	if r2.Status != domain.StatusRejected {
+		t.Errorf("expected Rejected, got %s", r2.Status)
+	}
+
+	// Case 3: Rejected - Over 60 (Age 61)
+	sources3 := domain.EligibilitySources{
+		DOPA: domain.DOPAResult{Valid: true, Age: 61, Alive: true, CardActive: true},
+		SSO:  domain.SSOResult{Section: "40"},
+		KTB:  domain.KTBResult{DepositTotal: 10000, AverageMonthlyIncome: 10000, PromptPayLinked: true},
+	}
+	r3 := EvaluateDecisionWithCriteria("claim-c3", sources3, nil, criteria)
+	if r3.Status != domain.StatusRejected {
+		t.Errorf("expected Rejected, got %s", r3.Status)
+	}
+
+	// Case 4: Rejected - Deposit total exceeds 400,000 THB (Deposit: 400,001 THB)
+	sources4 := domain.EligibilitySources{
+		DOPA: domain.DOPAResult{Valid: true, Age: 25, Alive: true, CardActive: true},
+		SSO:  domain.SSOResult{Section: "40"},
+		KTB:  domain.KTBResult{DepositTotal: 400001, AverageMonthlyIncome: 10000, PromptPayLinked: true},
+	}
+	r4 := EvaluateDecisionWithCriteria("claim-c4", sources4, nil, criteria)
+	if r4.Status != domain.StatusRejected {
+		t.Errorf("expected Rejected, got %s", r4.Status)
+	}
+
+	// Case 5: Rejected - SSO Section is not in whitelist (Section 33)
+	sources5 := domain.EligibilitySources{
+		DOPA: domain.DOPAResult{Valid: true, Age: 25, Alive: true, CardActive: true},
+		SSO:  domain.SSOResult{Section: "33"},
+		KTB:  domain.KTBResult{DepositTotal: 10000, AverageMonthlyIncome: 10000, PromptPayLinked: true},
+	}
+	r5 := EvaluateDecisionWithCriteria("claim-c5", sources5, nil, criteria)
+	if r5.Status != domain.StatusRejected {
+		t.Errorf("expected Rejected, got %s", r5.Status)
 	}
 }
 

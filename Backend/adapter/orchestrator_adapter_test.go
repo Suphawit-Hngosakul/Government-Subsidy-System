@@ -15,7 +15,7 @@ func TestHTTPOrchestratorAdapterReturnsDecodedDecision(t *testing.T) {
 	expected := domain.EligibilityResult{
 		ClaimID: "claim-001",
 		Status:  "approved",
-		Reasons: []string{"eligible by mock subsidy rules"},
+		Reasons: []string{"eligible under project criteria rules"},
 		Sources: domain.EligibilitySources{
 			DOPA: domain.EligibilityDOPA{Valid: true, Age: 35, Alive: true, CardActive: true},
 			SSO:  domain.EligibilitySSO{Section: "40", ContributionMonths: 12},

@@ -16,8 +16,11 @@ type ProjectCriteria struct {
 	MinAge             int      `json:"minAge"`
 	MaxAge             int      `json:"maxAge,omitempty"`
 	MaxMonthlyIncome   float64  `json:"maxMonthlyIncome,omitempty"`
+	MaxDepositTotal    float64  `json:"maxDepositTotal,omitempty"`
 	AllowedSSOSections []string `json:"allowedSsoSections,omitempty"`
 	RequirePromptPay   bool     `json:"requirePromptPay"`
+	RequireSSO         bool     `json:"requireSso"`
+	RequireKTB         bool     `json:"requireKtb"`
 }
 
 type ProjectInput struct {

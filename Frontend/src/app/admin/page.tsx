@@ -42,9 +42,20 @@ export default function AdminDashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [claims, setClaims] = useState<OfficerClaim[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+
+
   const [projectName, setProjectName] = useState("Household Relief Program");
   const [projectDescription, setProjectDescription] = useState("Financial support for eligible households");
   const [message, setMessage] = useState("");
+
+  const [minAge, setMinAge] = useState<number>(18);
+  const [maxAge, setMaxAge] = useState<string>("");
+  const [maxMonthlyIncome, setMaxMonthlyIncome] = useState<number>(30000);
+  const [maxDepositTotal, setMaxDepositTotal] = useState<number>(400000);
+  const [requirePromptPay, setRequirePromptPay] = useState<boolean>(true);
+  const [requireSso, setRequireSso] = useState<boolean>(true);
+  const [requireKtb, setRequireKtb] = useState<boolean>(true);
+  const [ssoSections, setSsoSections] = useState<string>("40");
 
   useEffect(() => {
     void refreshAdminData();
@@ -76,6 +87,25 @@ export default function AdminDashboardPage() {
   async function createProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("Creating project...");
+
+    const criteria: any = {
+      minAge: Number(minAge),
+      requirePromptPay,
+      requireSso,
+      requireKtb,
+    };
+
+    if (maxAge !== "") {
+      criteria.maxAge = Number(maxAge);
+    }
+    if (requireKtb) {
+      if (maxMonthlyIncome > 0) criteria.maxMonthlyIncome = Number(maxMonthlyIncome);
+      if (maxDepositTotal > 0) criteria.maxDepositTotal = Number(maxDepositTotal);
+    }
+    if (requireSso && ssoSections.trim() !== "") {
+      criteria.allowedSsoSections = ssoSections.split(",").map((s: string) => s.trim());
+    }
+
     const response = await fetch("/api/backend/api/v1/admin/project", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -83,12 +113,7 @@ export default function AdminDashboardPage() {
         name: projectName,
         description: projectDescription,
         active: true,
-        criteria: {
-          minAge: 18,
-          maxMonthlyIncome: 30000,
-          allowedSsoSections: ["40"],
-          requirePromptPay: true,
-        },
+        criteria,
       }),
     });
     const payload = await response.json().catch(() => ({}));
@@ -148,17 +173,79 @@ export default function AdminDashboardPage() {
             <h2>Project Management</h2>
             <span className="badge green">{projects.length} loaded</span>
           </div>
+
           <form className="form-grid admin-create-form" onSubmit={createProject}>
-            <label className="field">
-              <span>Project name</span>
-              <input className="input neo-input" value={projectName} onChange={(event) => setProjectName(event.target.value)} />
-            </label>
-            <label className="field">
-              <span>Description</span>
-              <input className="input neo-input" value={projectDescription} onChange={(event) => setProjectDescription(event.target.value)} />
-            </label>
-            <button className="btn btn-secondary" type="submit">Create project via backend</button>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+              <label className="field">
+                <span>Project name</span>
+                <input className="input neo-input" value={projectName} onChange={(event) => setProjectName(event.target.value)} />
+              </label>
+              <label className="field">
+                <span>Description</span>
+                <input className="input neo-input" value={projectDescription} onChange={(event) => setProjectDescription(event.target.value)} />
+              </label>
+            </div>
+
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "14px", marginTop: "8px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "bold", color: "var(--indigo)", display: "block", marginBottom: "12px" }}>
+                Target Criteria Settings
+              </span>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+                <label className="field">
+                  <span>Minimum Age</span>
+                  <input className="input neo-input" type="number" value={minAge} onChange={(event) => setMinAge(Number(event.target.value))} />
+                </label>
+                <label className="field">
+                  <span>Maximum Age (Optional)</span>
+                  <input className="input neo-input" type="number" placeholder="No limit" value={maxAge} onChange={(event) => setMaxAge(event.target.value)} />
+                </label>
+              </div>
+
+              <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", margin: "16px 0" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
+                  <input type="checkbox" checked={requireSso} onChange={(event) => setRequireSso(event.target.checked)} />
+                  <span>Verify SSO contribution status</span>
+                </label>
+
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
+                  <input type="checkbox" checked={requireKtb} onChange={(event) => setRequireKtb(event.target.checked)} />
+                  <span>Verify KTB financial status</span>
+                </label>
+              </div>
+
+              {requireSso && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px", marginBottom: "14px", padding: "12px", background: "rgba(31, 65, 109, 0.05)", borderRadius: "var(--radius)" }}>
+                  <label className="field">
+                    <span>Allowed SSO Sections (comma-separated, e.g. 39, 40)</span>
+                    <input className="input neo-input" placeholder="e.g. 40" value={ssoSections} onChange={(event) => setSsoSections(event.target.value)} />
+                  </label>
+                </div>
+              )}
+
+              {requireKtb && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "14px", padding: "12px", background: "rgba(185, 139, 47, 0.05)", borderRadius: "var(--radius)" }}>
+                  <label className="field">
+                    <span>Max Average Monthly Income (THB)</span>
+                    <input className="input neo-input" type="number" value={maxMonthlyIncome} onChange={(event) => setMaxMonthlyIncome(Number(event.target.value))} />
+                  </label>
+                  <label className="field">
+                    <span>Max Deposit Balance (THB)</span>
+                    <input className="input neo-input" type="number" value={maxDepositTotal} onChange={(event) => setMaxDepositTotal(Number(event.target.value))} />
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: "var(--muted)", alignSelf: "center", marginTop: "14px" }}>
+                    <input type="checkbox" checked={requirePromptPay} onChange={(event) => setRequirePromptPay(event.target.checked)} />
+                    <span>Require Linked PromptPay</span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <button className="btn btn-primary full-width" type="submit" style={{ marginTop: "10px" }}>
+              Create Subsidy Project
+            </button>
           </form>
+
           <div className="list">
             {projects.map((project) => (
               <div className="list-row" key={project.id}>

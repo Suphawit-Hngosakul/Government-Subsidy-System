@@ -116,7 +116,7 @@ func main() {
 	fmt.Printf("📊 Summary Details:\n")
 	fmt.Printf("   - Total Test Cases: %d\n", overall.TotalTests)
 	fmt.Printf("   - Pass Rate: %.1f%%\n", overall.PassRate)
-	fmt.Printf("   - Statement Coverage: %.1f%% (Target Range: 90-100%)\n", overall.CoveragePercent)
+	fmt.Printf("   - Statement Coverage: %.1f%% (Target Range: 90-100%%)\n", overall.CoveragePercent)
 	fmt.Printf("   - Apdex Score: %.1f%%\n\n", overall.ApdexScore)
 }
 
