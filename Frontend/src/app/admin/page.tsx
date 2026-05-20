@@ -141,25 +141,37 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="app-shell admin-area">
-      <header className="topbar glass">
+      <header className="topbar glass pao-top-nav-admin">
         <Link className="brand" href="/">
           <div className="seal">RT</div>
           <div className="brand-text">
-            <p className="brand-title">Admin Console</p>
-            <p className="brand-subtitle">Exception handling for pending cases only</p>
+            <p className="brand-title">Ruam Thai Portal</p>
+            <p className="brand-subtitle">Government Services</p>
           </div>
         </Link>
         <div className="nav-actions">
-          <button className="pill" onClick={refreshAdminData} type="button">Refresh backend data</button>
-          <Link className="pill" href="/admin/login">Sign out</Link>
+          <Link className="pill" href="/citizen">Citizen Area</Link>
+          <Link className="pill pao-pill-active" href="/admin">Admin Console</Link>
         </div>
       </header>
 
       <main className="admin-layout">
         <section className="glass panel admin-hero">
-          <span className="badge">Manual Fallback</span>
-          <h1 className="page-title">Exception Review Console</h1>
-          <p className="lead">Auto-decision is the default path. Officers only handle pending cases that need human judgment.</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <span className="badge">Manual Fallback</span>
+              <h1 className="page-title">Exception Review Console</h1>
+            </div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <button className="pill" onClick={refreshAdminData} type="button" style={{ cursor: "pointer" }}>
+                🔄 Sync / Refresh
+              </button>
+              <Link className="pill" href="/admin/login">
+                🚪 Sign out
+              </Link>
+            </div>
+          </div>
+          <p className="lead" style={{ marginTop: "12px" }}>Auto-decision is the default path. Officers only handle pending cases that need human judgment.</p>
           <div className="admin-grid">
             <div className="admin-tile neo-card"><span>Total projects</span><strong>{stats.projects.total}</strong></div>
             <div className="admin-tile neo-card"><span>Active projects</span><strong>{stats.projects.active}</strong></div>

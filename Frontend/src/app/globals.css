@@ -1439,3 +1439,17 @@ h1 {
     animation: none !important;
   }
 }
+
+/* Custom Styles for Unified Ruam Thai Portal Header and Pill Active */
+.pao-top-nav-admin {
+  max-width: 1440px !important;
+  margin: 0 auto 18px !important;
+}
+
+.pao-pill-active {
+  border-color: var(--indigo) !important;
+  background: var(--blue-soft) !important;
+  color: var(--indigo) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(31, 65, 109, 0.08) !important;
+}
