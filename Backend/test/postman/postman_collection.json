@@ -1,0 +1,828 @@
+{
+  "info": {
+    "_postman_id": "8bb3858c-68ff-4a4a-b5e0-d096b7582ea5",
+    "name": "Government Subsidy System E2E Collection",
+    "description": "ชุดการทดสอบ API ครอบคลุมทุกระบบย่อยของ Government Subsidy System (eKYC, Auth, Admin, External Providers, Claim Orchestration, Officer Queue) สำหรับการทำ Demo และการทดสอบ Newman อัตโนมัติ",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication & eKYC",
+      "description": "โฟลเดอร์ทดสอบระบบการลงทะเบียน ยืนยันตัวตนผ่านบัตรประชาชน (eKYC OCR & Confirm) และการล็อกอินเข้าระบบประชาชน",
+      "item": [
+        {
+          "name": "eKYC OCR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationalId\": \"{{national_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/ekyc/ocr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "ekyc",
+                "ocr"
+              ]
+            },
+            "description": "จำลองการอ่านข้อมูลบัตรประชาชนผ่านกล้องหรือระบบภาพ (OCR) เพื่อสแกนดึงข้อมูลตัวตนเบื้องต้น"
+          },
+          "response": []
+        },
+        {
+          "name": "eKYC Confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationalId\": \"{{national_id}}\",\n  \"laserCode\": \"{{laser_code}}\",\n  \"fullName\": \"สมชาย ใจดี\",\n  \"dateOfBirth\": \"1991-05-20\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/ekyc/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "ekyc",
+                "confirm"
+              ]
+            },
+            "description": "ยืนยันผลการเปรียบเทียบใบหน้าและข้อมูล Laser Code หลังบัตรประชาชนเพื่อเปลี่ยนสถานะ KYC เป็น verified"
+          },
+          "response": []
+        },
+        {
+          "name": "Register Citizen PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationalId\": \"{{national_id}}\",\n  \"password\": \"{{password}}\",\n  \"phone\": \"{{phone}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "ลงทะเบียนประชาชนและตั้งรหัส PIN เข้าระบบสำหรับการใช้งาน G-Wallet"
+          },
+          "response": []
+        },
+        {
+          "name": "Login Citizen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.token) {",
+                  "    pm.environment.set(\"citizen_token\", response.token);",
+                  "    console.log(\"Saved citizen_token to environment:\", response.token);",
+                  "}",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationalId\": \"{{national_id}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "ล็อกอินและดึง Token สำหรับเรียกใช้ API ภายใต้สิทธิ์ของประชาชนท่านนั้น"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout Citizen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizen_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "ออกจากระบบและทำลาย Session Token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Project Management",
+      "description": "โฟลเดอร์สำหรับแอดมินในการสร้าง แก้ไข และติดตามโครงการรัฐบาลแบบ Dynamic Criteria",
+      "item": [
+        {
+          "name": "List All Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "projects"
+              ]
+            },
+            "description": "ดึงข้อมูลรายการโครงการเงินอุดหนุนทั้งหมดในระบบสำหรับแอดมิน"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Subsidy Project",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "    pm.environment.set(\"project_id\", response.id);",
+                  "    console.log(\"Saved project_id to environment:\", response.id);",
+                  "}",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"โครงการคนละครึ่ง เฟส 5\",\n  \"description\": \"โครงการช่วยเหลือค่าครองชีพสำหรับประชาชนทั่วไปโดยรัฐบาลอุดหนุน 50%\",\n  \"active\": true,\n  \"criteria\": {\n    \"minAge\": 18,\n    \"maxAge\": 60,\n    \"maxMonthlyIncome\": 30000,\n    \"maxDepositTotal\": 500000,\n    \"allowedSsoSections\": [\"40\", \"39\"],\n    \"requirePromptPay\": true,\n    \"requireSso\": true,\n    \"requireKtb\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/project",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "project"
+              ]
+            },
+            "description": "สร้างโครงการใหม่แบบระบุเกณฑ์ Dynamic คัดกรองผ่าน DOPA, SSO, KTB"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/project/{{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "project",
+                "{{project_id}}"
+              ]
+            },
+            "description": "แสดงรายละเอียดของโครงการเฉพาะโครงการที่เพิ่งสร้างขึ้น"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Project Criteria",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"โครงการคนละครึ่ง เฟส 5 (อัปเดตใหม่)\",\n  \"description\": \"โครงการช่วยเหลือค่าครองชีพสำหรับประชาชนทั่วไปแบบอุดหนุนร่วมสิทธิ์ (อัปเดตเกณฑ์)\",\n  \"active\": true,\n  \"criteria\": {\n    \"minAge\": 18,\n    \"maxAge\": 65,\n    \"maxMonthlyIncome\": 35000,\n    \"maxDepositTotal\": 600000,\n    \"allowedSsoSections\": [\"40\", \"39\", \"33\"],\n    \"requirePromptPay\": true,\n    \"requireSso\": true,\n    \"requireKtb\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/project/{{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "project",
+                "{{project_id}}"
+              ]
+            },
+            "description": "แก้ไขขยายเกณฑ์การอนุมัติโครงการเพื่อเพิ่มสิทธิ์ให้ประชาชนกว้างขึ้น"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "stats"
+              ]
+            },
+            "description": "ดึงสถิติภาพรวม แดชบอร์ด สำหรับระบบหลังบ้านแอดมิน"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/audit-log?limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "audit-log"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "ตรวจสอบประวัติความปลอดภัยและการจัดการระบบโดยแอดมิน (Audit Logging)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. External Providers",
+      "description": "โฟลเดอร์รวบรวม API สำหรับทดสอบและเรียกใช้บริการระบบภายนอก (DOPA, SSO, KTB) โดยตรงผ่านเลขบัตรประชาชน",
+      "item": [
+        {
+          "name": "DOPA Verify",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dopa/verify/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dopa",
+                "verify",
+                "{{national_id}}"
+              ]
+            },
+            "description": "ตรวจสอบสถานะทะเบียนราษฎร์ อายุ และการมีชีวิตอยู่จริงกับฐานข้อมูลมหาดไทย (DOPA)"
+          },
+          "response": []
+        },
+        {
+          "name": "DOPA Card Status Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dopa/card-status/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dopa",
+                "card-status",
+                "{{national_id}}"
+              ]
+            },
+            "description": "เช็คความถูกต้องและสถานะความเคลื่อนไหวของบัตรประชาชนว่ายังคงใช้งานได้อยู่จริง ไม่หมดอายุหรือถูกเพิกถอน"
+          },
+          "response": []
+        },
+        {
+          "name": "SSO Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sso/status/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sso",
+                "status",
+                "{{national_id}}"
+              ]
+            },
+            "description": "ดึงข้อมูลการเป็นผู้ประกันตนและมาตราที่สังกัดจากระบบสำนักงานประกันสังคม (SSO)"
+          },
+          "response": []
+        },
+        {
+          "name": "SSO Contributions history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sso/contribution/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sso",
+                "contribution",
+                "{{national_id}}"
+              ]
+            },
+            "description": "เช็คประวัติการส่งเงินสมทบรายเดือนย้อนหลัง เพื่อวิเคราะห์พฤติกรรมและการมีส่วนร่วมระบบรัฐ"
+          },
+          "response": []
+        },
+        {
+          "name": "KTB Financial Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ktb/financial-check/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ktb",
+                "financial-check",
+                "{{national_id}}"
+              ]
+            },
+            "description": "ตรวจสอบเกณฑ์รายได้รวมเฉลี่ยและยอดเงินฝากรวมของบัญชีธนาคารกรุงไทยทั้งหมดรวมกัน"
+          },
+          "response": []
+        },
+        {
+          "name": "KTB Account & PromptPay Linkage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/ktb/account-status/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ktb",
+                "account-status",
+                "{{national_id}}"
+              ]
+            },
+            "description": "เช็ครายละเอียดบัญชีและการเชื่อมโยงบัตรพร้อมเพย์ว่าทำการผูกตรงกับเลขบัตรประชาชนเรียบร้อยแล้วหรือไม่"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Claim & Orchestration",
+      "description": "โฟลเดอร์กิจกรรมการยื่นขอรับเงินอุดหนุนและระบบประมวลผลกฎเงื่อนไขอัตโนมัติคู่ขนาน",
+      "item": [
+        {
+          "name": "Citizen Get Available Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/benefit/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "benefit",
+                "projects"
+              ]
+            },
+            "description": "ดึงข้อมูลรายการโครงการทั้งหมดที่ประชาชนสามารถสมัครขอรับสิทธิ์ได้จากฝั่งประชาชน"
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Claim Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "    pm.environment.set(\"claim_id\", response.id);",
+                  "    console.log(\"Saved claim_id to environment:\", response.id);",
+                  "}",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationalId\": \"{{national_id}}\",\n  \"projectId\": \"{{project_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/benefit/claim",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "benefit",
+                "claim"
+              ]
+            },
+            "description": "ประชาชนคลิกยื่นคำขอรับสิทธิ์ผ่าน G-Wallet เพื่อเข้าสู่คิวระบบงาน"
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger Parallel Orchestration Engine",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimId\": \"{{claim_id}}\",\n  \"nationalId\": \"{{national_id}}\",\n  \"projectId\": \"{{project_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/internal/orchestrate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "internal",
+                "orchestrate"
+              ]
+            },
+            "description": "เรียกใช้กลไกการประเมินประมวลผลคู่ขนานแบบ Dynamic Goroutines ดึงผลตรวจประเมิน 3 ขั้ว (DOPA, SSO, KTB) ทันที"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Real-time Claim Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/benefit/status/{{claim_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "benefit",
+                "status",
+                "{{claim_id}}"
+              ]
+            },
+            "description": "ดึงข้อมูลความคืบหน้า รายละเอียด ด่านประเมินผลการได้รับเงินอุดหนุนแบบปัจจุบัน"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Engine Decision Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimId\": \"{{claim_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/internal/decision",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "internal",
+                "decision"
+              ]
+            },
+            "description": "ดูการสรุปผลการตัดสินของ Engine คัดกรองอัตโนมัติ ว่าพร้อมผ่านทันที หรือต้องส่งต่อไป Manual queue"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Claim History for Citizen",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/benefit/history/{{national_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "benefit",
+                "history",
+                "{{national_id}}"
+              ]
+            },
+            "description": "ดูรายการคำร้องและสถานะประวัติทั้งหมดของประชาชนท่านนั้นเพื่อการทำ Auto-Restoration บน G-Wallet"
+          },
+          "response": []
+        },
+        {
+          "name": "Stream Real-time Claim Status (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/claim/{{claim_id}}/stream",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "claim",
+                "{{claim_id}}",
+                "stream"
+              ]
+            },
+            "description": "ดึงข้อมูลสตรีมมิ่งสดผ่าน Server-Sent Events (SSE) ติดตามสถานะแบบวินาทีต่อวินาที"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Officer Exception Handling",
+      "description": "โฟลเดอร์ทดสอบระบบการพิจารณาตรวจสอบข้อมูลเคสพิเศษด้วยเจ้าหน้าที่แอดมินส่วนควบคุม (Manual Review queue)",
+      "item": [
+        {
+          "name": "List Pending Officer Claims",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/officer/claims",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "officer",
+                "claims"
+              ]
+            },
+            "description": "ดึงรายการข้อมูลคำร้องขอเงินอุดหนุนที่ค้างรอการตัดสินใจด้วยมือของเจ้าหน้าที่รัฐ"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Officer Claim Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/officer/claim/{{claim_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "officer",
+                "claim",
+                "{{claim_id}}"
+              ]
+            },
+            "description": "ดึงข้อมูลสิทธิ์และรายละเอียดเบื้องหลังทุกมิติของคำร้องนั้นเพื่อประกอบการตัดสินใจของแอดมิน"
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Claim by Officer",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"officerId\": \"OFFICER-สมชาย\",\n  \"reason\": \"ข้อมูลประวัติและการคำนวณตรวจสอบรายได้รวมเฉลี่ย การผูกบัตรทะเบียนพร้อมเพย์ และประกันสังคมตรงเงื่อนไขข้อยกเว้นพิเศษ อนุมัติสำเร็จ\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/officer/claim/{{claim_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "officer",
+                "claim",
+                "{{claim_id}}",
+                "approve"
+              ]
+            },
+            "description": "เจ้าหน้าที่ทำการกดปุ่มอนุมัติผ่านคำร้องอย่างเป็นทางการด้วยตนเอง"
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Claim by Officer",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"officerId\": \"OFFICER-สมชาย\",\n  \"reason\": \"เนื่องจากตรวจพบเอกสารทางด้านบัญชีการเงินและเงินสมทบไม่ตรงตามเอกสิทธิ์ขั้นสูง ปฏิเสธสิทธิ์\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/officer/claim/{{claim_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "officer",
+                "claim",
+                "{{claim_id}}",
+                "reject"
+              ]
+            },
+            "description": "เจ้าหน้าที่ทำการกดปุ่มปฏิเสธคำร้องอย่างเป็นทางการพร้อมระบุเหตุผล"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/project/{{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "project",
+                "{{project_id}}"
+              ]
+            },
+            "description": "ทดลองลบโครงการ (ในการรันแบบ Newman โฟลว์สุดท้ายจะปิดโครงการออกเพื่อคืนค่าระบบ)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
