@@ -1,0 +1,44 @@
+# ------------------------------------------------------------------------------
+# Render Blueprint Specification (Infrastructure as Code)
+# Spin up the entire multi-service stack with a single click on Render dashboard.
+# Reference: https://render.com/docs/blueprints
+# ------------------------------------------------------------------------------
+databases:
+  # 1. Managed Postgres Database Instance
+  - name: gss-db
+    databaseName: gss_provider
+    user: gss_user
+    plan: free
+
+services:
+  # 2. Go Backend Web Service
+  - type: web
+    name: gss-backend
+    runtime: docker
+    dockerContext: Backend
+    dockerfilePath: Backend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: PROVIDER_DATABASE_URL
+        fromDatabase:
+          name: gss-db
+          property: connectionString
+      - key: ORCHESTRATOR_BASE_URL
+        value: https://gss-backend.onrender.com # Change this if you rename the web service
+      - key: GEMINI_API_KEY
+        sync: false # Prompts the developer to insert their key securely inside the Render GUI
+
+  # 3. Next.js Frontend Web Service
+  - type: web
+    name: gss-frontend
+    runtime: docker
+    dockerContext: Frontend
+    dockerfilePath: Frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: GOV_SUBSIDY_BACKEND_URL
+        value: https://gss-backend.onrender.com # Wires the frontend query routing directly to the backend

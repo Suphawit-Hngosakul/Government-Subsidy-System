@@ -1,0 +1,46 @@
+## macOS
+.DS_Store
+
+## Virtual Environment
+.venv/
+venv/
+env/
+
+## Python Cache
+__pycache__/
+*.pyc
+
+## Testing
+.pytest_cache/
+htmlcov/
+
+## IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+## Docker
+docker-compose.yml
+Dockerfile
+
+## Logs
+logs/
+*.log
+
+## Project Specific
+backups/
+docs/.DS_Store
+frontend/.DS_Store
+docs/architecture/.DS_Store
+src/api/.DS_Store
+src/backend/.DS_Store
+src/frontend/.DS_Store
+.env
+
+## Environment Variables
+.env
+.env.*
+
+## Testing
+test-reports/

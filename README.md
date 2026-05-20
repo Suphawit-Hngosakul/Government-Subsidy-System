@@ -61,6 +61,9 @@
 |--------|----------|-------------|
 | `GET` | `/api/v1/ktb/financial-check/:nationalId` | ยอดเงินฝากรวม + รายได้เฉลี่ย/เดือน |
 | `GET` | `/api/v1/ktb/account-status/:nationalId` | มีบัญชีพร้อมเพย์ผูกไว้หรือไม่ |
+
+Contract: [`docs/api/provider-contract.md`](docs/api/provider-contract.md)  
+Database: [`docs/database/provider-database.md`](docs/database/provider-database.md)
 ---
 
 ## คนที่ 4 — ธนธัช นิติเจริญ 6609650095
@@ -75,6 +78,8 @@
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/v1/claim/:claimId/stream` | SSE — push สถานะ real-time ให้ frontend |
+
+Contract: [`docs/api/orchestrator-contract.md`](docs/api/orchestrator-contract.md)
 ---
 
 ## คนที่ 5 — ศุภวิชญ์ หงอสกุล 6609650053

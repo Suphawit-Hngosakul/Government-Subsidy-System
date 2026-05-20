@@ -1,0 +1,23 @@
+services:
+  provider-postgres:
+    image: postgres:16-alpine
+    container_name: gss-provider-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gss_provider
+      POSTGRES_USER: gss_user
+      POSTGRES_PASSWORD: gss_password
+      TZ: Asia/Bangkok
+    ports:
+      - "5433:5432"
+    volumes:
+      - provider_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gss_user -d gss_provider"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  provider_postgres_data:
